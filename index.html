@@ -7,12 +7,9 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; font-family: 'Consolas', 'Courier New', monospace; cursor: none; }
         .screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; text-align: left; color: #00ff00; padding: 40px; }
-        
-        /* Terminal Styling */
         .code-text { font-size: 1.1rem; line-height: 1.3; width: 100%; max-width: 900px; white-space: pre-wrap; align-self: flex-start; }
         .cursor { display: inline-block; width: 10px; height: 20px; background: #00ff00; animation: blink 1s infinite; vertical-align: middle; }
         @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
-
         .btn-container { display: none; gap: 40px; margin-top: 20px; }
         button { background: black; color: #00ff00; border: 1px solid #00ff00; padding: 10px 25px; font-size: 1.1rem; cursor: pointer; font-family: inherit; }
         button:hover { background: #003300; }
@@ -22,11 +19,9 @@
         .sad-face { font-size: 10rem; margin-bottom: 10px; line-height: 1; }
         .bsod-title { font-size: 1.8rem; line-height: 1.3; margin-bottom: 25px; font-weight: 300; }
         .bsod-sub { font-size: 1.3rem; margin-bottom: 40px; font-weight: 300; }
-        
         .qr-area { display: flex; gap: 25px; align-items: flex-start; }
         .qr-code { width: 120px; height: 120px; background: white; padding: 8px; }
         .qr-code img { width: 100%; height: auto; }
-        .qr-text { font-size: 0.95rem; line-height: 1.6; font-weight: 300; }
         
         #blackout { background: black; display: none; }
         .top-right-notice { position: fixed; top: 15px; right: 15px; color: #00ff00; font-size: 0.8rem; z-index: 10000; opacity: 0.4; }
@@ -48,14 +43,14 @@
         <div class="sad-face">:(</div>
         <div class="bsod-title">Your device ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
         <div class="bsod-sub"><span id="percent">0</span>% complete</div>
+        <div id="bsod-override-msg" style="font-size: 1.5rem; color: #ff4444; font-weight: bold; margin-top: 20px; display: none;">jk... override starting...</div>
         <div class="qr-area">
             <div class="qr-code">
                 <img src="https://qrserver.com" alt="FBI QR">
             </div>
-            <div class="qr-text">
-                For more information about this issue and possible fixes, visit https://windows.com<br><br>
-                If you call a support person, give them this info:<br>
-                Stop code: <span id="bsod-msg" style="font-weight: bold;">CRITICAL_PROCESS_DIED</span>
+            <div style="font-size: 0.95rem; line-height: 1.6; font-weight: 300;">
+                For more info, scan the code.<br>
+                Stop code: <span style="font-weight: bold;">CRITICAL_PROCESS_DIED</span>
             </div>
         </div>
     </div>
@@ -68,59 +63,44 @@
         const mainUI = document.getElementById('main-ui');
         const bsod = document.getElementById('bsod');
         const percentTxt = document.getElementById('percent');
+        const overrideMsg = document.getElementById('bsod-override-msg');
         const blackout = document.getElementById('blackout');
         let prankActive = false;
 
-        const introMsg = "init_data_harvest.exe --target=C:/Users/%USERNAME% --force\n\n> INITIALIZING DATA_EXTRACTION_PROTOCOL...\n> TARGET_ROOT_DIRECTORY: C:/USER/ACCOUNT_INFO\n> DO YOU CONSENT TO YOUR ACCOUNT INFO TO BE \"BORROWED\"?.....";
-        let charIndex = 0;
+        const stealLines = [
+            "\n> ACCESSING C:\\Users\\NoahO\\Documents...",
+            "\n[STEALING]: private_passwords.db ... 100%",
+            "\n[STEALING]: browser_cookies.tar.gz ... 100%",
+            "\n> UPLOADING TO REMOTE SERVER [IP: 192.168.1.1]...",
+            "\n> C:\\Windows\\system32> del /S /Q C:\\Windows\\System32\\config\\*",
+            "\nDeleting: SYSTEM hive...",
+            "\n\n> I HAVE TAKEN YOUR FILES.",
+            "\n> MEMORY SUCCESSFULLY WIPED.",
+            "\n> BYE!"
+        ];
 
-        function typeIntro() {
-            if (charIndex < introMsg.length) {
-                typewriter.innerHTML += introMsg.charAt(charIndex++);
-                setTimeout(typeIntro, 30);
-            } else {
-                typewriter.innerHTML += '<span class="cursor"></span>';
-                btnBox.style.display = 'flex';
-            }
+        function runStealSequence() {
+            stealLines.forEach((line, i) => {
+                setTimeout(() => {
+                    typewriter.innerHTML += line;
+                    if (i === stealLines.length - 1) {
+                        setTimeout(() => { mainUI.style.display = 'none'; blackout.style.display = 'flex'; }, 2500);
+                    }
+                }, i * 600);
+            });
         }
-        window.onload = typeIntro;
-
-        function forceFull() {
-            let elem = document.documentElement;
-            if (elem.requestFullscreen) elem.requestFullscreen().catch(()=>{});
-        }
-
-        document.addEventListener('mousedown', () => { if (prankActive) forceFull(); });
 
         function startPrank(choice) {
             prankActive = true;
-            forceFull();
             btnBox.style.display = 'none';
             if (document.querySelector('.cursor')) document.querySelector('.cursor').remove();
 
             if (choice === 'yes') {
-                const yesLines = [
-                    "\n\n> THANK YOU FOR YOUR COOPERATION.",
-                    "\n> ACCESSING C:\\Users\\NoahO\\Documents...",
-                    "\n[STEALING]: private_passwords.db ... DONE",
-                    "\n[STEALING]: tax_records_2024.pdf ... DONE",
-                    "\n[STEALING]: browser_history.db ... DONE",
-                    "\n> UPLOADING TO REMOTE SERVER [IP: 192.168.1.1]...",
-                    "\n> C:\\Windows\\system32> del /S /Q C:\\Windows\\System32\\config\\*",
-                    "\nDeleting: SYSTEM hive...",
-                    "\nDeleting: SOFTWARE hive...",
-                    "\n\n> I HAVE TAKEN YOUR FILES.",
-                    "\n> MEMORY SUCCESSFULLY WIPED.",
-                    "\n> BYE!"
-                ];
-                yesLines.forEach((l, idx) => {
-                    setTimeout(() => { 
-                        typewriter.innerHTML += l; 
-                        if (idx === yesLines.length - 1) setTimeout(() => { mainUI.style.display='none'; blackout.style.display='flex'; }, 2000);
-                    }, idx * 600);
-                });
+                typewriter.innerHTML += "\n\n> THANK YOU FOR YOUR COOPERATION.";
+                setTimeout(runStealSequence, 600);
             } else {
-                typewriter.innerHTML += "\n\n> ACCESS DENIED BY USER.\n> TERMINATING SESSION...";
+                // NO PATH: "Fine" -> Blue Screen -> 99.9% -> jk -> Override -> Steal
+                typewriter.innerHTML += "\n\n> ACCESS DENIED BY USER.\n> FINE.\n> TERMINATING SESSION...";
                 setTimeout(() => { 
                     mainUI.style.display = 'none'; 
                     bsod.style.display = 'flex'; 
@@ -132,33 +112,35 @@
         function runBsodChain() {
             let p = 0;
             let iv = setInterval(() => { 
-                p += Math.floor(Math.random() * 12) + 1;
-                if (p >= 100) { 
-                    p = 100; clearInterval(iv); 
+                p += (Math.random() * 8);
+                if (p >= 99.9) { 
+                    p = 99.9; clearInterval(iv); 
                     setTimeout(() => {
-                        bsod.style.display = 'none';
-                        mainUI.style.display = 'flex';
-                        typewriter.innerHTML = "Microsoft Windows [Version 10.0.22631.3447]\n\n> CRITICAL_ERROR_OVERRIDE_INITIATED...";
-                        const override = [
-                            "\n> INITIATING SYSTEM_OVERRIDE...",
-                            "\n> C:\\Windows\\system32> net user Administrator /active:yes",
-                            "\n> C:\\Windows\\system32> del /S /Q C:\\Windows\\System32\\config\\*",
-                            "\nDeleting: SECURITY hive...",
-                            "\n\n> I HAVE TAKEN YOUR FILES.",
-                            "\n> MEMORY SUCCESSFULLY WIPED.",
-                            "\n> BYE!"
-                        ];
-                        override.forEach((ol, oidx) => {
-                            setTimeout(() => { 
-                                typewriter.innerHTML += ol; 
-                                if (oidx === override.length - 1) setTimeout(() => { mainUI.style.display='none'; blackout.style.display='flex'; }, 2000);
-                            }, oidx * 600);
-                        });
-                    }, 2000);
+                        overrideMsg.style.display = 'block';
+                        setTimeout(() => {
+                            bsod.style.display = 'none';
+                            mainUI.style.display = 'flex';
+                            typewriter.innerHTML = "Microsoft Windows [Version 10.0.22631.3447]\n\n> CRITICAL_ERROR_OVERRIDE_INITIATED...\n> INITIATING SYSTEM_OVERRIDE...";
+                            runStealSequence();
+                        }, 2000);
+                    }, 1000);
                 }
-                percentTxt.innerHTML = p;
-            }, 400);
+                percentTxt.innerHTML = p.toFixed(1);
+            }, 300);
         }
+
+        const introMsg = "init_data_harvest.exe --target=C:/Users/%USERNAME% --force\n\n> INITIALIZING DATA_EXTRACTION_PROTOCOL...\n> TARGET_ROOT_DIRECTORY: C:/USER/ACCOUNT_INFO\n> DO YOU CONSENT TO YOUR ACCOUNT INFO TO BE \"BORROWED\"?.....";
+        let charIndex = 0;
+        function typeIntro() {
+            if (charIndex < introMsg.length) {
+                typewriter.innerHTML += introMsg.charAt(charIndex++);
+                setTimeout(typeIntro, 30);
+            } else {
+                typewriter.innerHTML += '<span class="cursor"></span>';
+                btnBox.style.display = 'flex';
+            }
+        }
+        window.onload = typeIntro;
     </script>
 </body>
 </html>
