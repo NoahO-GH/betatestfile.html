@@ -1,168 +1,164 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYSTEM_CRITICAL</title>
-    <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; font-family: 'Consolas', 'Courier New', monospace; cursor: none; }
-        .screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; text-align: left; color: #00ff00; padding: 40px; }
-        .code-text { font-size: 1.1rem; line-height: 1.3; width: 100%; max-width: 900px; white-space: pre-wrap; align-self: flex-start; }
-        .cursor { display: inline-block; width: 10px; height: 20px; background: #00ff00; animation: blink 1s infinite; vertical-align: middle; }
-        @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
-        .btn-container { display: none; gap: 40px; margin-top: 20px; }
-        button { background: black; color: #00ff00; border: 1px solid #00ff00; padding: 10px 25px; font-size: 1.1rem; cursor: pointer; font-family: inherit; }
-        button:hover { background: #003300; }
+<style>
+    body { margin: 0; padding: 0; overflow: hidden; background: black; cursor: none; }
+    
+    /* Terminal Styles */
+    #mainUI { display: flex; flex-direction: column; height: 100vh; font-family: monospace; color: #00ff00; padding: 20px; }
+    
+    /* BSOD Styles */
+    #bsod { display: none; flex-direction: column; background: #0078d7; color: white; height: 100vh; font-family: 'Segoe UI', Tahoma, sans-serif; padding: 10%; justify-content: center; }
+    .sad-face { font-size: 100px; margin-bottom: 20px; }
+    
+    /* Blackout Styles */
+    #blackout { display: none; height: 100vh; width: 100vw; background: black; position: fixed; top: 0; left: 0; z-index: 9999; }
 
-        /* BSOD Styling */
-        #bsod { background: #0078d7; color: white; display: none; font-family: "Segoe UI", Segoe, Tahoma, sans-serif; padding: 10% 15%; text-align: left; align-items: flex-start; }
-        .sad-face { font-size: 10rem; margin-bottom: 10px; line-height: 1; }
-        .bsod-title { font-size: 1.8rem; line-height: 1.3; margin-bottom: 25px; font-weight: 300; }
-        .bsod-sub { font-size: 1.3rem; margin-bottom: 40px; font-weight: 300; }
+    /* Uppercase JK Override Alert */
+    #overrideMsg {
+        display: none; background: #7a0000; color: white; font-family: 'Courier New', monospace;
+        padding: 40px; border: 5px solid red; position: fixed; top: 50%; left: 50%;
+        transform: translate(-50%, -50%); z-index: 10000; text-align: center;
+        text-transform: uppercase; box-shadow: 0 0 100px red;
+    }
 
-        /* Manual Pixel QR Code */
-        .manual-qr { width: 120px; height: 120px; background: white; padding: 10px; display: flex; flex-direction: column; }
-        .qr-row { display: flex; flex: 1; }
-        .qr-row span { flex: 1; background: white; }
-        .qr-row span.b { background: #0078d7; } /* Blue pixels to match BSOD */
-        
-        #blackout { background: black; display: none; }
-        .top-right-notice { position: fixed; top: 15px; right: 15px; color: #00ff00; font-size: 0.8rem; z-index: 10000; opacity: 0.4; }
-    </style>
+    /* Webcam Dot */
+    #camDot { display: none; position: fixed; top: 15px; left: 15px; width: 10px; height: 10px; background: red; border-radius: 50%; box-shadow: 0 0 10px red; z-index: 10001; animation: blink 1s infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Screen Shake */
+    .glitch-shake { animation: shake 0.2s infinite; }
+    @keyframes shake {
+        0% { transform: translate(1px, 1px); }
+        20% { transform: translate(-3px, 0px); }
+        40% { transform: translate(1px, -1px); }
+        60% { transform: translate(-1px, 1px); }
+        80% { transform: translate(-1px, -1px); }
+        100% { transform: translate(1px, -2px); }
+    }
+</style>
 </head>
-<body>
+<body class="glitch-shake">
 
-    <div class="top-right-notice">Nothing will change if you leave</div>
-
-    <div id="main-ui" class="screen">
-        <div id="typewriter" class="code-text">Microsoft Windows [Version 10.0.22631.3447]<br>(c) Microsoft Corporation. All rights reserved.<br><br>C:\Windows\system32> </div>
-        <div class="btn-container" id="btn-box">
-            <button onclick="startPrank('yes')">[ YES ]</button>
-            <button onclick="startPrank('no')">[ NO ]</button>
-        </div>
+<div id="mainUI">
+    <div id="typewriter"></div>
+    <div id="btnBox" style="display:none; gap: 20px; margin-top: 20px;">
+        <button onclick="startPrank('yes')" style="background:none; border:1px solid #00ff00; color:#00ff00; padding:10px; cursor:pointer;">[ YES ]</button>
+        <button onclick="startPrank('no')" style="background:none; border:1px solid #00ff00; color:#00ff00; padding:10px; cursor:pointer;">[ NO ]</button>
     </div>
+</div>
 
-    <div id="bsod" class="screen">
-        <div class="sad-face">:(</div>
-        <div class="bsod-title">Your device ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
-        <div class="bsod-sub"><span id="percent">0</span>% complete</div>
-        
-        <div id="bsod-override-msg" style="font-size: 1.3rem; color: #ff4444; font-family: 'Consolas', monospace; font-weight: bold; margin-bottom: 30px; display: none;">
-            throw new SystemOverrideException("JK... OVERRIDE STARTING...");
-        </div>
+<div id="bsod">
+    <div class="sad-face">:(</div>
+    <div style="font-size: 24px;">Your PC ran into a problem and needs to restart.</div>
+    <div style="font-size: 18px; margin-top: 20px;"><span id="percent">0</span>% complete</div>
+</div>
 
-        <div class="qr-area" style="display: flex; gap: 25px;">
-            <div class="manual-qr">
-                <div class="qr-row"><span></span><span class="b"></span><span class="b"></span><span class="b"></span><span class="b"></span><span class="b"></span><span></span></div>
-                <div class="qr-row"><span class="b"></span><span></span><span></span><span></span><span></span><span></span><span class="b"></span></div>
-                <div class="qr-row"><span class="b"></span><span></span><span class="b"></span><span class="b"></span><span class="b"></span><span></span><span class="b"></span></div>
-                <div class="qr-row"><span class="b"></span><span></span><span class="b"></span><span class="b"></span><span class="b"></span><span></span><span class="b"></span></div>
-                <div class="qr-row"><span class="b"></span><span></span><span></span><span></span><span></span><span></span><span class="b"></span></div>
-                <div class="qr-row"><span></span><span class="b"></span><span class="b"></span><span class="b"></span><span class="b"></span><span class="b"></span><span></span></div>
-            </div>
-            <div style="font-size: 0.95rem; line-height: 1.6; font-weight: 300;">
-                For more info, scan the code.<br>
-                Stop code: <span style="font-weight: bold;">CRITICAL_PROCESS_DIED</span>
-            </div>
-        </div>
-    </div>
+<div id="blackout"></div>
 
-    <div id="blackout" class="screen"></div>
+<div id="overrideMsg">
+    <p>[!] CRITICAL_SYSTEM_OVERRIDE_INITIATED</p>
+    <p>> ERROR_CODE: 0xJK_SYSTEM_BYPASS</p>
+    <p>> STATUS: EXECUTING_DATA_HARVEST_ANYWAY...</p>
+</div>
 
-    <script>
-        const typewriter = document.getElementById('typewriter');
-        const btnBox = document.getElementById('btn-box');
-        const mainUI = document.getElementById('main-ui');
-        const bsod = document.getElementById('bsod');
-        const percentTxt = document.getElementById('percent');
-        const overrideMsg = document.getElementById('bsod-override-msg');
-        const blackout = document.getElementById('blackout');
+<div id="camDot"></div>
 
-        const stealLines = [
-            "\n> ACCESSING C:\\Users\\NoahO\\Documents...",
-            "\n[STEALING]: private_passwords.db ... 100%",
-            "\n[STEALING]: browser_cookies.tar.gz ... 100%",
-            "\n> UPLOADING TO REMOTE SERVER [IP: 192.168.1.1]...",
-            "\n> C:\\Windows\\system32> del /S /Q C:\\Windows\\System32\\config\\*"
-        ];
+<script>
+const typewriter = document.getElementById('typewriter');
+const btnBox = document.getElementById('btnBox');
+const mainUI = document.getElementById('mainUI');
+const bsod = document.getElementById('bsod');
+const blackout = document.getElementById('blackout');
+const percentTxt = document.getElementById('percent');
+const overrideMsg = document.getElementById('overrideMsg');
 
-        const slowFinalLines = [
-            "\n\n> I HAVE TAKEN YOUR FILES.",
-            "\n> MEMORY SUCCESSFULLY WIPED.",
-            "\n> BYE!"
-        ];
+const stealLines = [
+    "\n > [SYSTEM]: ACCESSING INTEGRATED WEBCAM... SUCCESS.",
+    "\n > [STEALING]: PRIVATE_KEYS.PEM ... 100%",
+    "\n > [STEALING]: BROWSER_HISTORY.SQLITE ... 100%",
+    "\n > [ALERT]: SECURITY BYPASS DETECTED. INITIALIZING PURGE."
+];
 
-        function runStealSequence() {
-            let totalDelay = 0;
+function systemBeep() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.15);
+}
 
-            // Normal speed for stealing
-            stealLines.forEach((line, i) => {
-                totalDelay = i * 600;
-                setTimeout(() => {
-                    typewriter.innerHTML += line;
-                }, totalDelay);
-            });
+function startPrank(choice) {
+    if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+    btnBox.style.display = 'none';
+    if (choice === 'no') {
+        typewriter.innerHTML += "\n\n > ACCESS DENIED. FINE. TERMINATING SESSION...";
+        setTimeout(runBsodChain, 1500);
+    } else {
+        runStealSequence();
+    }
+}
 
-            // Extra slow speed for the final 3 lines
-            slowFinalLines.forEach((line, i) => {
-                setTimeout(() => {
-                    typewriter.innerHTML += line;
-                    if (i === slowFinalLines.length - 1) {
-                        setTimeout(() => { mainUI.style.display = 'none'; blackout.style.display = 'flex'; }, 3500);
-                    }
-                }, totalDelay + 1000 + (i * 2000)); // 2 second delay between each
-            });
+function runStealSequence() {
+    document.getElementById('camDot').style.display = 'block';
+    stealLines.forEach((line, i) => {
+        setTimeout(() => {
+            typewriter.innerHTML += line;
+            if (i === stealLines.length - 1) setTimeout(triggerBlackout, 2000);
+        }, i * 800);
+    });
+}
+
+function triggerBlackout() {
+    mainUI.style.display = 'none';
+    blackout.style.display = 'flex';
+    // Instant full blackout, no text as requested
+    setTimeout(() => {
+        blackout.style.display = 'none';
+        bsod.style.display = 'flex';
+        runBsodChain();
+    }, 3000);
+}
+
+function runBsodChain() {
+    let p = 0;
+    systemBeep();
+    let iv = setInterval(() => {
+        p += (Math.random() * 0.1);
+        if (p >= 99.99) {
+            p = 99.99;
+            clearInterval(iv);
+            setTimeout(() => {
+                overrideMsg.style.display = 'block';
+                setTimeout(fillScreenWithErrors, 1000);
+            }, 1500);
         }
+        percentTxt.innerHTML = p.toFixed(2);
+    }, 50);
+}
 
-        function startPrank(choice) {
-            btnBox.style.display = 'none';
-            if (document.querySelector('.cursor')) document.querySelector('.cursor').remove();
+function fillScreenWithErrors() {
+    const filler = document.createElement('div');
+    filler.style = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; color: #ff0000; font-family: monospace; overflow: hidden; pointer-events: none; z-index: 9998; background: rgba(0,0,0,0.9); word-break: break-all; font-size: 10px;";
+    document.body.appendChild(filler);
 
-            if (choice === 'yes') {
-                typewriter.innerHTML += "\n\n> THANK YOU FOR YOUR COOPERATION.";
-                setTimeout(runStealSequence, 800);
-            } else {
-                typewriter.innerHTML += "\n\n> ACCESS DENIED BY USER.\n> FINE.\n> TERMINATING SESSION...";
-                setTimeout(() => { 
-                    mainUI.style.display = 'none'; 
-                    bsod.style.display = 'flex'; 
-                    runBsodChain();
-                }, 1500);
-            }
+    let count = 0;
+    const fillInterval = setInterval(() => {
+        filler.innerHTML += "SYSTEM_OVERRIDE_ERROR_0x" + Math.floor(Math.random()*16777215).toString(16).toUpperCase() + " ";
+        count++;
+        if (count > 1500) {
+            clearInterval(fillInterval);
+            setTimeout(() => location.reload(), 3000); // Reset after prank
         }
+    }, 5);
+}
 
-        function runBsodChain() {
-            let p = 0;
-            let iv = setInterval(() => { 
-                p += (Math.random() * 5);
-                if (p >= 99.9) { 
-                    p = 99.9; clearInterval(iv); 
-                    setTimeout(() => {
-                        overrideMsg.style.display = 'block';
-                        setTimeout(() => {
-                            bsod.style.display = 'none';
-                            mainUI.style.display = 'flex';
-                            typewriter.innerHTML = "Microsoft Windows [Version 10.0.22631.3447]\n\n> CRITICAL_ERROR_OVERRIDE_INITIATED...";
-                            runStealSequence();
-                        }, 3000);
-                    }, 1500);
-                }
-                percentTxt.innerHTML = p.toFixed(3); // High precision for 99.999% feel
-            }, 300);
-        }
-
-        const introMsg = "init_data_harvest.exe --target=C:/Users/%USERNAME% --force\n\n> INITIALIZING DATA_EXTRACTION_PROTOCOL...\n> TARGET_ROOT_DIRECTORY: C:/USER/ACCOUNT_INFO\n> DO YOU CONSENT TO YOUR ACCOUNT INFO TO BE \"BORROWED\"?.....";
-        let charIndex = 0;
-        function typeIntro() {
-            if (charIndex < introMsg.length) {
-                typewriter.innerHTML += introMsg.charAt(charIndex++);
-                setTimeout(typeIntro, 30);
-            } else {
-                typewriter.innerHTML += '<span class="cursor"></span>';
-                btnBox.style.display = 'flex';
-            }
-        }
-        window.onload = typeIntro;
-    </script>
+window.onload = () => {
+    typewriter.innerHTML = "init_data_harvest.exe --target=C:/Users/%USERNAME% --force\n\n > INITIALIZING DATA_EXTRACTION_PROTOCOL...\n > DO YOU CONSENT?";
+    btnBox.style.display = 'flex';
+};
+</script>
 </body>
 </html>
