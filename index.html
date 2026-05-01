@@ -18,97 +18,107 @@
             padding: 40px;
         }
         .code-text { 
-            font-size: 1.5rem; 
-            line-height: 1.6;
-            margin-bottom: 30px;
-            max-width: 800px;
+            font-size: 1.5rem; line-height: 1.6;
+            margin-bottom: 30px; max-width: 800px;
+            white-space: pre-wrap;
         }
-        .btn-container { display: flex; gap: 40px; }
+        #log-container {
+            width: 80%; height: 150px;
+            overflow: hidden; font-size: 0.9rem;
+            color: #004400; border-top: 1px solid #004400;
+            padding-top: 10px; margin-top: 20px;
+        }
+        .btn-container { display: none; gap: 40px; }
         button { 
             background: #003300; color: #00ff00; border: 1px solid #00ff00; 
             padding: 15px 30px; font-size: 1.2rem; cursor: pointer; 
-            font-family: inherit; text-transform: uppercase;
+            font-family: inherit; animation: flash 1s infinite;
         }
-        button:hover { background: #00ff00; color: black; }
-        #bsod { 
-            background: #0078d7; color: white; 
-            font-family: 'Segoe UI', sans-serif; 
-            display: none; padding: 50px; 
-            text-align: left; align-items: flex-start; 
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
+        #bsod { background: #0078d7; color: white; display: none; padding: 50px; text-align: left; }
         #blackout { background: black; display: none; }
     </style>
 </head>
 <body>
 
 <div id="main-ui">
-    <div class="code-text">
-        > INITIALIZING DATA_EXTRACTION_PROTOCOL...<br>
-        > TARGET_ROOT_DIRECTORY: C:/USER/ACCOUNT_INFO<br>
-        > DO YOU CONSENT TO DATA TRANSFER? [Y/N]
-    </div>
-    <div class="btn-container">
+    <div id="typewriter" class="code-text"></div>
+    <div class="btn-container" id="btn-box">
         <button onclick="startPrank('yes')">[ YES ]</button>
         <button onclick="startPrank('no')">[ NO ]</button>
     </div>
+    <div id="log-container"></div>
 </div>
 
 <div id="bsod" class="screen">
     <div style="font-size: 10rem;">:(</div>
     <div style="font-size: 2rem; margin: 20px 0;">Your PC ran into a problem and needs to restart.</div>
-    <div id="bsod-msg" style="font-size: 1.5rem; margin-top: 50px; display:none;">FORCED OVERRIDE: ACQUIRING DATA ANYWAY...</div>
+    <div id="bsod-msg" style="display:none; font-size: 1.5rem; margin-top: 50px;">FORCED OVERRIDE: ACQUIRING DATA ANYWAY...</div>
 </div>
 
 <div id="blackout" class="screen"></div>
 
 <script>
+    const typewriter = document.getElementById('typewriter');
+    const btnBox = document.getElementById('btn-box');
+    const logContainer = document.getElementById('log-container');
     const mainUI = document.getElementById('main-ui');
     const bsod = document.getElementById('bsod');
-    const bsodMsg = document.getElementById('bsod-msg');
     const blackout = document.getElementById('blackout');
     let prankActive = false;
 
-    function forceFull() {
-        let elem = document.documentElement;
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen().catch(() => {});
-        } else if (elem.webkitRequestFullscreen) {
-            elem.webkitRequestFullscreen().catch(() => {});
+    const message = "> INITIALIZING DATA_EXTRACTION_PROTOCOL...\n> TARGET_ROOT_DIRECTORY: C:/USER/ACCOUNT_INFO\n> DO YOU CONSENT TO DATA TRANSFER? [Y/N]";
+    let charIndex = 0;
+
+    function typeWriter() {
+        if (charIndex < message.length) {
+            typewriter.innerHTML += message.charAt(charIndex);
+            charIndex++;
+            setTimeout(typeWriter, 50);
+        } else {
+            btnBox.style.display = 'flex';
         }
     }
 
-    // Aggressive instant-fullscreen trigger on any click
-    document.addEventListener('mousedown', () => {
-        if (prankActive) forceFull();
-    });
+    window.onload = typeWriter;
 
-    // Jump-back loop
-    setInterval(() => {
-        if (prankActive && !document.fullscreenElement) {
-            forceFull();
-        }
-    }, 100);
+    function addLog(text) {
+        const line = document.createElement('div');
+        line.textContent = `> ${text}`;
+        logContainer.prepend(line);
+    }
+
+    function forceFull() {
+        let elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen().catch(()=>{});
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(()=>{});
+    }
+
+    document.addEventListener('mousedown', () => { if (prankActive) forceFull(); });
+    setInterval(() => { if (prankActive && !document.fullscreenElement) forceFull(); }, 100);
 
     function startPrank(choice) {
         prankActive = true;
         forceFull();
+        btnBox.style.display = 'none';
         
+        const logs = ["Searching directories...", "Accessing cookies...", "Copying passwords...", "Bypassing firewall...", "Uploading to remote server..."];
+        let i = 0;
+        setInterval(() => { if(prankActive) addLog(logs[i++ % logs.length]); }, 400);
+
         if (choice === 'yes') {
-            mainUI.innerHTML = `<div class="code-text" style="color:#00ff00;">> ACCESS GRANTED.<br>> THANK YOU.</div>`;
-            setTimeout(() => {
-                mainUI.style.display = 'none';
-                blackout.style.display = 'flex';
-            }, 2000);
+            typewriter.innerHTML = "> ACCESS GRANTED.\n> DATA TRANSFER IN PROGRESS...";
+            setTimeout(() => { mainUI.style.display = 'none'; blackout.style.display = 'flex'; }, 4000);
         } else {
             mainUI.style.display = 'none';
             bsod.style.display = 'flex';
-            setTimeout(() => {
-                bsodMsg.style.display = 'block';
-                setTimeout(() => {
-                    bsod.style.display = 'none';
-                    blackout.style.display = 'flex';
-                }, 3000);
-            }, 10000);
+            setTimeout(() => { 
+                document.getElementById('bsod-msg').style.display = 'block';
+                setTimeout(() => { bsod.style.display = 'none'; blackout.style.display = 'flex'; }, 3000);
+            }, 8000);
         }
     }
 </script>
