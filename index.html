@@ -5,117 +5,144 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SYSTEM_CRITICAL</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; font-family: 'Courier New', Courier, monospace; cursor: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; font-family: 'Consolas', 'Courier New', monospace; cursor: none; }
         .screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; text-align: left; color: #00ff00; padding: 40px; }
-        .code-text { font-size: 1.5rem; line-height: 1.6; margin-bottom: 30px; max-width: 800px; white-space: pre-wrap; }
+        
+        /* Command Prompt Style */
+        .code-text { font-size: 1.2rem; line-height: 1.4; margin-bottom: 30px; max-width: 900px; white-space: pre-wrap; align-self: flex-start; }
+        .cursor { display: inline-block; width: 10px; height: 20px; background: #00ff00; animation: blink 1s infinite; vertical-align: middle; }
+        @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
         .btn-container { display: none; gap: 40px; }
-        button { background: #003300; color: #00ff00; border: 1px solid #00ff00; padding: 15px 30px; font-size: 1.2rem; cursor: pointer; font-family: inherit; animation: flash 1s infinite; }
-        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        button { background: black; color: #00ff00; border: 1px solid #00ff00; padding: 10px 25px; font-size: 1.1rem; cursor: pointer; font-family: inherit; }
+        button:hover { background: #003300; }
 
-        /* Realistic Windows 11 BSOD */
-        #bsod { background: #0078d7; color: white; display: none; font-family: "Segoe UI", Tahoma, sans-serif; padding: 10% 15%; text-align: left; align-items: flex-start; }
-        .sad-face { font-size: 8rem; margin-bottom: 20px; }
-        .bsod-title { font-size: 1.8rem; line-height: 1.4; margin-bottom: 30px; }
-        .bsod-sub { font-size: 1.2rem; margin-bottom: 40px; }
-        .qr-area { display: flex; gap: 20px; align-items: center; }
-        .qr-code { width: 100px; height: 100px; background: white; padding: 5px; }
-        .qr-text { font-size: 0.9rem; line-height: 1.5; }
-
+        /* Modern Windows 11 BSOD */
+        #bsod { background: #0078d7; color: white; display: none; font-family: "Segoe UI", Segoe, Tahoma, sans-serif; padding: 10% 15%; text-align: left; align-items: flex-start; }
+        .sad-face { font-size: 10rem; margin-bottom: 10px; line-height: 1; }
+        .bsod-title { font-size: 1.8rem; line-height: 1.3; margin-bottom: 25px; font-weight: 300; }
+        .bsod-sub { font-size: 1.3rem; margin-bottom: 40px; font-weight: 300; }
+        .qr-area { display: flex; gap: 25px; align-items: flex-start; }
+        .qr-code { width: 120px; height: 120px; background: white; padding: 8px; }
+        .qr-code img { width: 100%; height: auto; }
+        .qr-text { font-size: 0.95rem; line-height: 1.6; font-weight: 300; }
+        
         #blackout { background: black; display: none; }
+        .top-right-notice { position: fixed; top: 15px; right: 15px; color: #00ff00; font-size: 0.8rem; z-index: 10000; opacity: 0.5; }
     </style>
 </head>
 <body>
 
-<div id="main-ui" class="screen">
-    <div id="typewriter" class="code-text"></div>
-    <div class="btn-container" id="btn-box">
-        <button onclick="startPrank('yes')">[ YES ]</button>
-        <button onclick="startPrank('no')">[ NO ]</button>
-    </div>
-</div>
+    <div class="top-right-notice">Nothing will change if you leave</div>
 
-<div id="bsod" class="screen">
-    <div class="sad-face">:(</div>
-    <div class="bsod-title">Your device ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
-    <div class="bsod-sub"><span id="percent">0</span>% complete</div>
-    <div class="qr-area">
-        <div class="qr-code"><img src="https://qrserver.com" alt="QR"></div>
-        <div class="qr-text">
-            For more information about this issue and possible fixes, visit https://windows.com<br><br>
-            If you call a support person, give them this info:<br>
-            Stop code: <span id="bsod-msg">CRITICAL_PROCESS_DIED</span>
+    <div id="main-ui" class="screen">
+        <div id="typewriter" class="code-text">Microsoft Windows [Version 10.0.22631.3447]<br>(c) Microsoft Corporation. All rights reserved.<br><br>C:\Windows\system32> </div>
+        <div class="btn-container" id="btn-box">
+            <button onclick="startPrank('yes')">[ YES ]</button>
+            <button onclick="startPrank('no')">[ NO ]</button>
         </div>
     </div>
-</div>
 
-<div id="blackout" class="screen"></div>
+    <div id="bsod" class="screen">
+        <div class="sad-face">:(</div>
+        <div class="bsod-title">Your device ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
+        <div class="bsod-sub"><span id="percent">0</span>% complete</div>
+        <div class="qr-area">
+            <div class="qr-code">
+                <img src="https://qrserver.com" alt="QR">
+            </div>
+            <div class="qr-text">
+                For more information about this issue and possible fixes, visit https://windows.com<br><br>
+                If you call a support person, give them this info:<br>
+                Stop code: <span id="bsod-msg" style="font-weight: bold;">CRITICAL_PROCESS_DIED</span>
+            </div>
+        </div>
+    </div>
 
-<script>
-    const typewriter = document.getElementById('typewriter');
-    const btnBox = document.getElementById('btn-box');
-    const mainUI = document.getElementById('main-ui');
-    const bsod = document.getElementById('bsod');
-    const percentTxt = document.getElementById('percent');
-    const bsodMsg = document.getElementById('bsod-msg');
-    const blackout = document.getElementById('blackout');
-    let prankActive = false;
+    <div id="blackout" class="screen"></div>
 
-    const message = "> INITIALIZING DATA_EXTRACTION_PROTOCOL...\n> TARGET_ROOT_DIRECTORY: C:/USER/ACCOUNT_INFO\n> DO YOU CONSENT TO YOUR ACCOUNT INFO TO BE \"BORROWED\"?.....";
-    let charIndex = 0;
+    <script>
+        const typewriter = document.getElementById('typewriter');
+        const btnBox = document.getElementById('btn-box');
+        const mainUI = document.getElementById('main-ui');
+        const bsod = document.getElementById('bsod');
+        const percentTxt = document.getElementById('percent');
+        const bsodMsg = document.getElementById('bsod-msg');
+        const blackout = document.getElementById('blackout');
+        let prankActive = false;
 
-    function typeWriter() {
-        if (charIndex < message.length) {
-            typewriter.innerHTML += message.charAt(charIndex);
-            charIndex++;
-            setTimeout(typeWriter, 50);
-        } else {
-            btnBox.style.display = 'flex';
+        const message = "init_data_harvest.exe --target=C:/Users/%USERNAME% --force\n\n> INITIALIZING DATA_EXTRACTION_PROTOCOL...\n> TARGET_ROOT_DIRECTORY: C:/USER/ACCOUNT_INFO\n> DO YOU CONSENT TO YOUR ACCOUNT INFO TO BE \"BORROWED\"?.....";
+        let charIndex = 0;
+
+        function typeWriter() {
+            if (charIndex < message.length) {
+                typewriter.innerHTML += message.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeWriter, 30);
+            } else {
+                typewriter.innerHTML += '<span class="cursor"></span>';
+                btnBox.style.display = 'flex';
+            }
         }
-    }
 
-    window.onload = typeWriter;
+        window.onload = typeWriter;
 
-    function forceFull() {
-        let elem = document.documentElement;
-        if (elem.requestFullscreen) elem.requestFullscreen().catch(()=>{});
-        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(()=>{});
-    }
+        function forceFull() {
+            let elem = document.documentElement;
+            if (elem.requestFullscreen) elem.requestFullscreen().catch(()=>{});
+            else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(()=>{});
+        }
 
-    document.addEventListener('mousedown', () => { if (prankActive) forceFull(); });
-    setInterval(() => { if (prankActive && !document.fullscreenElement) forceFull(); }, 100);
+        document.addEventListener('mousedown', () => { if (prankActive) forceFull(); });
+        setInterval(() => { if (prankActive && !document.fullscreenElement) forceFull(); }, 100);
 
-    function startPrank(choice) {
-        prankActive = true;
-        forceFull();
-        btnBox.style.display = 'none';
-        
-        if (choice === 'yes') {
-            typewriter.innerHTML = "> ACCESS GRANTED.\n> THANK YOU. DATA TRANSFER IN PROGRESS.....";
-            setTimeout(() => { mainUI.style.display = 'none'; blackout.style.display = 'flex'; }, 4000);
-        } else {
-            mainUI.style.display = 'none';
-            bsod.style.display = 'flex';
-            
-            // Loading Percentage Counter
-            let count = 0;
-            const counter = setInterval(() => {
-                count += Math.floor(Math.random() * 10) + 1;
-                if (count >= 100) {
-                    count = 100;
-                    clearInterval(counter);
-                    setTimeout(() => {
-                        bsodMsg.innerHTML = "WE_WILL_TAKE_IT_ANYWAY";
-                        bsodMsg.style.color = "red";
+        function startPrank(choice) {
+            prankActive = true;
+            forceFull();
+            btnBox.style.display = 'none';
+            document.querySelector('.cursor').remove();
+
+            if (choice === 'yes') {
+                const lines = [
+                    "\n\nC:\\Windows\\system32> taskkill /F /IM explorer.exe",
+                    "\nSUCCESS: The process \"explorer.exe\" has been terminated.",
+                    "\nC:\\Windows\\system32> del /S /Q C:\\Users\\*.*",
+                    "\nDeleting: C:\\Users\\NoahO\\Documents\\passwords.txt...",
+                    "\nDeleting: C:\\Users\\NoahO\\Pictures\\Private...",
+                    "\nC:\\Windows\\system32> shutdown /r /t 0"
+                ];
+                
+                lines.forEach((line, i) => {
+                    setTimeout(() => { typewriter.innerHTML += line; }, i * 600);
+                });
+
+                setTimeout(() => {
+                    mainUI.style.display = 'none';
+                    blackout.style.display = 'flex';
+                }, 4000);
+
+            } else {
+                mainUI.style.display = 'none';
+                bsod.style.display = 'flex';
+                let count = 0;
+                const counter = setInterval(() => {
+                    count += Math.floor(Math.random() * 10) + 1;
+                    if (count >= 100) {
+                        count = 100;
+                        clearInterval(counter);
                         setTimeout(() => {
-                            bsod.style.display = 'none';
-                            blackout.style.display = 'flex';
-                        }, 2000);
-                    }, 1000);
-                }
-                percentTxt.innerHTML = count;
-            }, 500);
+                            bsodMsg.innerHTML = "USER_DENIED_ACCESS_OVERRIDE_ACTIVE";
+                            bsodMsg.style.color = "#ff4444";
+                            setTimeout(() => {
+                                bsod.style.display = 'none';
+                                blackout.style.display = 'flex';
+                            }, 2000);
+                        }, 1000);
+                    }
+                    percentTxt.innerHTML = count;
+                }, 300);
+            }
         }
-    }
-</script>
+    </script>
 </body>
 </html>
