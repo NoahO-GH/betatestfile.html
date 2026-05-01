@@ -5,106 +5,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SECURITY BREACH</title>
     <style>
-        body {
-            background-color: black;
-            color: #00ff00;
+        /* Hidden cursor makes it hard to find the 'X' button */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background: black; 
             font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-            text-align: center;
+            cursor: none; /* Hides the mouse */
         }
-
-        #hacker-screen {
-            width: 80%;
+        #main-ui, .screen { 
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            height: 100vh; text-align: center; color: #00ff00; 
         }
-
-        .glitch-title {
-            font-size: 5rem;
-            color: #ff0000;
-            text-shadow: 2px 2px #550000;
-            animation: glitch 0.2s infinite;
-            cursor: pointer;
-            margin-bottom: 20px;
+        .glitch { 
+            font-size: 2.5rem; color: #ff0000; 
+            text-shadow: 2px 2px #550000; 
+            animation: glitch-anim 0.2s infinite; 
+            margin-bottom: 30px; padding: 20px;
         }
-
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-5px, 5px); }
-            40% { transform: translate(-5px, -5px); }
-            60% { transform: translate(5px, 5px); }
-            80% { transform: translate(5px, -5px); }
-            100% { transform: translate(0); }
+        @keyframes glitch-anim { 
+            0% { transform: translate(0); } 
+            20% { transform: translate(-3px, 3px); } 
+            80% { transform: translate(3px, -3px); } 
+            100% { transform: translate(0); } 
         }
-
-        #timer {
-            font-size: 4rem;
-            color: #ff0000;
-            border: 3px solid #ff0000;
-            padding: 20px;
-            margin: 20px;
-            background: rgba(255, 0, 0, 0.1);
+        .btn-container { display: flex; gap: 40px; cursor: pointer; }
+        button { 
+            background: black; color: #ff0000; border: 2px solid #ff0000; 
+            padding: 20px 40px; font-size: 1.8rem; cursor: none; 
+            font-family: inherit; 
         }
-
-        .warning {
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #ffffff;
+        #bsod { 
+            background: #0078d7; color: white; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: none; padding: 50px; 
+            text-align: left; align-items: flex-start; 
         }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
+        .hidden { display: none !important; }
+        #blackout { background: black; display: none; }
     </style>
 </head>
-<body>
+<body id="app-body">
 
-<div id="hacker-screen">
-    <div style="color: #fff; letter-spacing: 10px; margin-bottom: 10px;">ENCRYPTION ACTIVE</div>
-    
-    <!-- CHANGE THE URL BELOW -->
-    <a href="https://your-link-here.com" id="hack-link">
-        <h1 class="glitch-title">SYSTEM HACKED</h1>
-    </a>
-
-    <div id="timer">15:00</div>
-
-    <div class="warning">
-        <p>Your files have been encrypted using AES-256. Attempting to restart or close this window will result in <strong>PERMANENT DATA LOSS</strong>.</p>
+<div id="main-ui">
+    <div class="glitch">DO YOU CONSENT TO YOUR ACCOUNT INFO TO BE "BORROWED"?</div>
+    <div class="btn-container">
+        <button onclick="handleYes()">YES</button>
+        <button onclick="handleNo()">NO</button>
     </div>
 </div>
 
+<div id="bsod" class="screen">
+    <div style="font-size: 10rem;">:(</div>
+    <div style="font-size: 2rem; margin: 20px 0;">Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
+    <div id="bsod-msg" style="font-size: 1.5rem; margin-top: 50px;" class="hidden">WE WILL TAKE IT ANYWAY....</div>
+</div>
+
+<div id="blackout" class="screen"></div>
+
 <script>
-    // 15-Minute Countdown Timer
-    let time = 900;
-    const timerElement = document.getElementById('timer');
+    const mainUI = document.getElementById('main-ui');
+    const bsod = document.getElementById('bsod');
+    const bsodMsg = document.getElementById('bsod-msg');
+    const blackout = document.getElementById('blackout');
+    let isLocked = false;
 
-    setInterval(() => {
-        let minutes = Math.floor(time / 60);
-        let seconds = time % 60;
-        seconds = seconds < 10 ? '0' + seconds : seconds;
-        timerElement.innerHTML = `${minutes}:${seconds}`;
-        if (time > 0) time--;
-    }, 1000);
+    function goFull() {
+        let elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen();
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+        isLocked = true;
+    }
 
-    // Instant Full-Screen on Click
-    document.getElementById('hack-link').addEventListener('click', function(e) {
-        var elem = document.documentElement;
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) {
-            elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) {
-            elem.msRequestFullscreen();
-        }
-    });
+    // Force fullscreen if they move the mouse or click after the prank starts
+    window.addEventListener('mousemove', () => { if(isLocked) goFull(); });
+    window.addEventListener('click', () => { if(isLocked) goFull(); });
+
+    function playGlitchSound() {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(60, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.start();
+        setTimeout(() => oscillator.stop(), 10000);
+    }
+
+    function handleYes() {
+        goFull();
+        playGlitchSound();
+        mainUI.innerHTML = `<div class="glitch" style="color:red; font-size: 5rem;">THANK YOU</div>`;
+        setTimeout(() => {
+            mainUI.classList.add('hidden');
+            blackout.style.display = 'flex';
+        }, 2000);
+    }
+
+    function handleNo() {
+        goFull();
+        playGlitchSound();
+        mainUI.classList.add('hidden');
+        bsod.style.display = 'flex';
+        
+        setTimeout(() => {
+            bsodMsg.classList.remove('hidden');
+            setTimeout(() => {
+                bsod.style.display = 'none';
+                blackout.style.display = 'flex';
+            }, 3000);
+        }, 10000);
+    }
 </script>
-
 </body>
 </html>
