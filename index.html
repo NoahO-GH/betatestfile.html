@@ -141,6 +141,10 @@
 </head>
 <body>
 
+<div id="bootMsg" style="color:#00ff00; text-align:center; margin-top:40vh;">
+    INITIALIZING SYSTEM...
+</div>
+
 <div id="camDot"></div>
 <div id="terminal"></div><span class="cursor" id="cursor"></span>
 
@@ -246,11 +250,7 @@ function startGlitchLoop() {
 
 /* MAIN SEQUENCE */
 async function startSequence() {
+    document.getElementById("bootMsg").style.display = "none";
     startGlitchLoop();
 
-    await typeWriter("MICROSOFT WINDOWS [VERSION 10.0.22631.3447]\n(C) MICROSOFT CORPORATION. ALL RIGHTS RESERVED.\n\n", 55);
-    await typeWriter("C:\\USERS\\ADMIN> INIT_DATA_HARVEST.EXE --TARGET=SYSTEM_ROOT --FORCE\n", 45);
-    await sleep(450);
-    await typeWriter("> DETECTING NETWORK INTERFACE... ", 45);
-    await sleep(600);
-    await typeWriter("SUCCESS
+    await typeWriter("MICROSOFT WINDOWS [VERSION 10.0.22631.
