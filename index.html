@@ -22,12 +22,6 @@
             margin-bottom: 30px; max-width: 800px;
             white-space: pre-wrap;
         }
-        #log-container {
-            width: 80%; height: 150px;
-            overflow: hidden; font-size: 0.9rem;
-            color: #004400; border-top: 1px solid #004400;
-            padding-top: 10px; margin-top: 20px;
-        }
         .btn-container { display: none; gap: 40px; }
         button { 
             background: #003300; color: #00ff00; border: 1px solid #00ff00; 
@@ -50,13 +44,12 @@
         <button onclick="startPrank('yes')">[ YES ]</button>
         <button onclick="startPrank('no')">[ NO ]</button>
     </div>
-    <div id="log-container"></div>
 </div>
 
 <div id="bsod" class="screen">
     <div style="font-size: 10rem;">:(</div>
     <div style="font-size: 2rem; margin: 20px 0;">Your PC ran into a problem and needs to restart.</div>
-    <div id="bsod-msg" style="display:none; font-size: 1.5rem; margin-top: 50px;">FORCED OVERRIDE: ACQUIRING DATA ANYWAY...</div>
+    <div id="bsod-msg" style="display:none; font-size: 1.5rem; margin-top: 50px;">FORCED OVERRIDE: ACQUIRING DATA ANYWAY.....</div>
 </div>
 
 <div id="blackout" class="screen"></div>
@@ -64,32 +57,27 @@
 <script>
     const typewriter = document.getElementById('typewriter');
     const btnBox = document.getElementById('btn-box');
-    const logContainer = document.getElementById('log-container');
     const mainUI = document.getElementById('main-ui');
     const bsod = document.getElementById('bsod');
     const blackout = document.getElementById('blackout');
     let prankActive = false;
 
-    const message = "> INITIALIZING DATA_EXTRACTION_PROTOCOL...\n> TARGET_ROOT_DIRECTORY: C:/USER/ACCOUNT_INFO\n> DO YOU CONSENT TO DATA TRANSFER? [Y/N]";
+    // The typing message
+    const message = "> INITIALIZING DATA_EXTRACTION_PROTOCOL...\n> TARGET_ROOT_DIRECTORY: C:/USER/ACCOUNT_INFO\n> DO YOU CONSENT TO YOUR ACCOUNT INFO TO BE \"BORROWED\"?.....";
     let charIndex = 0;
 
     function typeWriter() {
         if (charIndex < message.length) {
             typewriter.innerHTML += message.charAt(charIndex);
             charIndex++;
-            setTimeout(typeWriter, 50);
+            setTimeout(typeWriter, 50); // Speed of typing
         } else {
-            btnBox.style.display = 'flex';
+            btnBox.style.display = 'flex'; // Show buttons after typing finishes
         }
     }
 
+    // Start typing on load
     window.onload = typeWriter;
-
-    function addLog(text) {
-        const line = document.createElement('div');
-        line.textContent = `> ${text}`;
-        logContainer.prepend(line);
-    }
 
     function forceFull() {
         let elem = document.documentElement;
@@ -97,6 +85,7 @@
         else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(()=>{});
     }
 
+    // Fullscreen lock triggers
     document.addEventListener('mousedown', () => { if (prankActive) forceFull(); });
     setInterval(() => { if (prankActive && !document.fullscreenElement) forceFull(); }, 100);
 
@@ -105,12 +94,8 @@
         forceFull();
         btnBox.style.display = 'none';
         
-        const logs = ["Searching directories...", "Accessing cookies...", "Copying passwords...", "Bypassing firewall...", "Uploading to remote server..."];
-        let i = 0;
-        setInterval(() => { if(prankActive) addLog(logs[i++ % logs.length]); }, 400);
-
         if (choice === 'yes') {
-            typewriter.innerHTML = "> ACCESS GRANTED.\n> DATA TRANSFER IN PROGRESS...";
+            typewriter.innerHTML = "> ACCESS GRANTED.\n> THANK YOU. DATA TRANSFER IN PROGRESS.....";
             setTimeout(() => { mainUI.style.display = 'none'; blackout.style.display = 'flex'; }, 4000);
         } else {
             mainUI.style.display = 'none';
