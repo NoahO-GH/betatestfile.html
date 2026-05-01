@@ -3,37 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRITICAL SYSTEM ERROR</title>
+    <title>TERMINAL_ACCESS</title>
     <style>
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; background: black; 
             font-family: 'Courier New', Courier, monospace;
-            cursor: none; /* Hides the mouse to make exiting harder */
+            cursor: none; 
         }
         #main-ui, .screen { 
             display: flex; flex-direction: column; 
             justify-content: center; align-items: center; 
-            height: 100vh; text-align: center; color: #00ff00; 
+            height: 100vh; text-align: left; color: #00ff00; 
+            padding: 40px;
         }
-        .glitch { 
-            font-size: 2.5rem; color: #ff0000; 
-            text-shadow: 2px 2px #550000; 
-            animation: glitch-anim 0.1s infinite; 
-            margin-bottom: 30px; padding: 20px;
-        }
-        @keyframes glitch-anim { 
-            0% { transform: translate(0); } 
-            20% { transform: translate(-5px, 5px); } 
-            80% { transform: translate(5px, -5px); } 
-            100% { transform: translate(0); } 
+        .code-text { 
+            font-size: 1.5rem; 
+            line-height: 1.6;
+            margin-bottom: 30px;
+            max-width: 800px;
         }
         .btn-container { display: flex; gap: 40px; }
         button { 
-            background: black; color: #ff0000; border: 2px solid #ff0000; 
-            padding: 20px 40px; font-size: 1.8rem; cursor: none; 
-            font-family: inherit; 
+            background: #003300; color: #00ff00; border: 1px solid #00ff00; 
+            padding: 15px 30px; font-size: 1.2rem; cursor: pointer; 
+            font-family: inherit; text-transform: uppercase;
         }
+        button:hover { background: #00ff00; color: black; }
         #bsod { 
             background: #0078d7; color: white; 
             font-family: 'Segoe UI', sans-serif; 
@@ -46,17 +42,21 @@
 <body>
 
 <div id="main-ui">
-    <div class="glitch">DO YOU CONSENT TO YOUR ACCOUNT INFO TO BE "BORROWED"?</div>
+    <div class="code-text">
+        > INITIALIZING DATA_EXTRACTION_PROTOCOL...<br>
+        > TARGET_ROOT_DIRECTORY: C:/USER/ACCOUNT_INFO<br>
+        > DO YOU CONSENT TO DATA TRANSFER? [Y/N]
+    </div>
     <div class="btn-container">
-        <button onclick="startPrank('yes')">YES</button>
-        <button onclick="startPrank('no')">NO</button>
+        <button onclick="startPrank('yes')">[ YES ]</button>
+        <button onclick="startPrank('no')">[ NO ]</button>
     </div>
 </div>
 
 <div id="bsod" class="screen">
     <div style="font-size: 10rem;">:(</div>
-    <div style="font-size: 2rem; margin: 20px 0;">Your PC ran into a problem and needs to restart. We're just collecting some error info...</div>
-    <div id="bsod-msg" style="font-size: 1.5rem; margin-top: 50px; display:none;">WE WILL TAKE IT ANYWAY....</div>
+    <div style="font-size: 2rem; margin: 20px 0;">Your PC ran into a problem and needs to restart.</div>
+    <div id="bsod-msg" style="font-size: 1.5rem; margin-top: 50px; display:none;">FORCED OVERRIDE: ACQUIRING DATA ANYWAY...</div>
 </div>
 
 <div id="blackout" class="screen"></div>
@@ -69,29 +69,32 @@
     let prankActive = false;
 
     function forceFull() {
-        if (!document.fullscreenElement) {
-            let elem = document.documentElement;
-            if (elem.requestFullscreen) elem.requestFullscreen().catch(()=>{});
-            else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(()=>{});
+        let elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen().catch(() => {});
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen().catch(() => {});
         }
     }
 
-    // THIS IS THE JUMP-BACK LOOP
-    // It checks every 500ms. If they try to move or click, it forces them back.
+    // Aggressive instant-fullscreen trigger on any click
+    document.addEventListener('mousedown', () => {
+        if (prankActive) forceFull();
+    });
+
+    // Jump-back loop
     setInterval(() => {
         if (prankActive && !document.fullscreenElement) {
-            // We need a "listener" for the next move to trigger it
-            window.addEventListener('mousemove', forceFull, { once: true });
-            window.addEventListener('click', forceFull, { once: true });
+            forceFull();
         }
-    }, 500);
+    }, 100);
 
     function startPrank(choice) {
         prankActive = true;
         forceFull();
         
         if (choice === 'yes') {
-            mainUI.innerHTML = `<div class="glitch" style="color:red; font-size: 5rem;">THANK YOU</div>`;
+            mainUI.innerHTML = `<div class="code-text" style="color:#00ff00;">> ACCESS GRANTED.<br>> THANK YOU.</div>`;
             setTimeout(() => {
                 mainUI.style.display = 'none';
                 blackout.style.display = 'flex';
