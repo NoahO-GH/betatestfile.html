@@ -3,42 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL_ACCESS</title>
+    <title>SYSTEM_CRITICAL</title>
     <style>
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; background: black; 
-            font-family: 'Courier New', Courier, monospace;
-            cursor: none; 
-        }
-        #main-ui, .screen { 
-            display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; 
-            height: 100vh; text-align: left; color: #00ff00; 
-            padding: 40px;
-        }
-        .code-text { 
-            font-size: 1.5rem; line-height: 1.6;
-            margin-bottom: 30px; max-width: 800px;
-            white-space: pre-wrap;
-        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; font-family: 'Courier New', Courier, monospace; cursor: none; }
+        .screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; text-align: left; color: #00ff00; padding: 40px; }
+        .code-text { font-size: 1.5rem; line-height: 1.6; margin-bottom: 30px; max-width: 800px; white-space: pre-wrap; }
         .btn-container { display: none; gap: 40px; }
-        button { 
-            background: #003300; color: #00ff00; border: 1px solid #00ff00; 
-            padding: 15px 30px; font-size: 1.2rem; cursor: pointer; 
-            font-family: inherit; animation: flash 1s infinite;
-        }
-        @keyframes flash {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        #bsod { background: #0078d7; color: white; display: none; padding: 50px; text-align: left; }
+        button { background: #003300; color: #00ff00; border: 1px solid #00ff00; padding: 15px 30px; font-size: 1.2rem; cursor: pointer; font-family: inherit; animation: flash 1s infinite; }
+        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* Realistic Windows 11 BSOD */
+        #bsod { background: #0078d7; color: white; display: none; font-family: "Segoe UI", Tahoma, sans-serif; padding: 10% 15%; text-align: left; align-items: flex-start; }
+        .sad-face { font-size: 8rem; margin-bottom: 20px; }
+        .bsod-title { font-size: 1.8rem; line-height: 1.4; margin-bottom: 30px; }
+        .bsod-sub { font-size: 1.2rem; margin-bottom: 40px; }
+        .qr-area { display: flex; gap: 20px; align-items: center; }
+        .qr-code { width: 100px; height: 100px; background: white; padding: 5px; }
+        .qr-text { font-size: 0.9rem; line-height: 1.5; }
+
         #blackout { background: black; display: none; }
     </style>
 </head>
 <body>
 
-<div id="main-ui">
+<div id="main-ui" class="screen">
     <div id="typewriter" class="code-text"></div>
     <div class="btn-container" id="btn-box">
         <button onclick="startPrank('yes')">[ YES ]</button>
@@ -47,9 +35,17 @@
 </div>
 
 <div id="bsod" class="screen">
-    <div style="font-size: 10rem;">:(</div>
-    <div style="font-size: 2rem; margin: 20px 0;">Your PC ran into a problem and needs to restart.</div>
-    <div id="bsod-msg" style="display:none; font-size: 1.5rem; margin-top: 50px;">FORCED OVERRIDE: ACQUIRING DATA ANYWAY.....</div>
+    <div class="sad-face">:(</div>
+    <div class="bsod-title">Your device ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
+    <div class="bsod-sub"><span id="percent">0</span>% complete</div>
+    <div class="qr-area">
+        <div class="qr-code"><img src="https://qrserver.com" alt="QR"></div>
+        <div class="qr-text">
+            For more information about this issue and possible fixes, visit https://windows.com<br><br>
+            If you call a support person, give them this info:<br>
+            Stop code: <span id="bsod-msg">CRITICAL_PROCESS_DIED</span>
+        </div>
+    </div>
 </div>
 
 <div id="blackout" class="screen"></div>
@@ -59,10 +55,11 @@
     const btnBox = document.getElementById('btn-box');
     const mainUI = document.getElementById('main-ui');
     const bsod = document.getElementById('bsod');
+    const percentTxt = document.getElementById('percent');
+    const bsodMsg = document.getElementById('bsod-msg');
     const blackout = document.getElementById('blackout');
     let prankActive = false;
 
-    // The typing message
     const message = "> INITIALIZING DATA_EXTRACTION_PROTOCOL...\n> TARGET_ROOT_DIRECTORY: C:/USER/ACCOUNT_INFO\n> DO YOU CONSENT TO YOUR ACCOUNT INFO TO BE \"BORROWED\"?.....";
     let charIndex = 0;
 
@@ -70,13 +67,12 @@
         if (charIndex < message.length) {
             typewriter.innerHTML += message.charAt(charIndex);
             charIndex++;
-            setTimeout(typeWriter, 50); // Speed of typing
+            setTimeout(typeWriter, 50);
         } else {
-            btnBox.style.display = 'flex'; // Show buttons after typing finishes
+            btnBox.style.display = 'flex';
         }
     }
 
-    // Start typing on load
     window.onload = typeWriter;
 
     function forceFull() {
@@ -85,7 +81,6 @@
         else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(()=>{});
     }
 
-    // Fullscreen lock triggers
     document.addEventListener('mousedown', () => { if (prankActive) forceFull(); });
     setInterval(() => { if (prankActive && !document.fullscreenElement) forceFull(); }, 100);
 
@@ -100,10 +95,25 @@
         } else {
             mainUI.style.display = 'none';
             bsod.style.display = 'flex';
-            setTimeout(() => { 
-                document.getElementById('bsod-msg').style.display = 'block';
-                setTimeout(() => { bsod.style.display = 'none'; blackout.style.display = 'flex'; }, 3000);
-            }, 8000);
+            
+            // Loading Percentage Counter
+            let count = 0;
+            const counter = setInterval(() => {
+                count += Math.floor(Math.random() * 10) + 1;
+                if (count >= 100) {
+                    count = 100;
+                    clearInterval(counter);
+                    setTimeout(() => {
+                        bsodMsg.innerHTML = "WE_WILL_TAKE_IT_ANYWAY";
+                        bsodMsg.style.color = "red";
+                        setTimeout(() => {
+                            bsod.style.display = 'none';
+                            blackout.style.display = 'flex';
+                        }, 2000);
+                    }, 1000);
+                }
+                percentTxt.innerHTML = count;
+            }, 500);
         }
     }
 </script>
