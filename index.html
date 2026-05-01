@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SECURITY BREACH</title>
+    <title>CRITICAL SYSTEM ERROR</title>
     <style>
-        /* Hidden cursor makes it hard to find the 'X' button */
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; background: black; 
             font-family: 'Courier New', Courier, monospace;
-            cursor: none; /* Hides the mouse */
+            cursor: none; /* Hides the mouse to make exiting harder */
         }
         #main-ui, .screen { 
             display: flex; flex-direction: column; 
@@ -20,16 +19,16 @@
         .glitch { 
             font-size: 2.5rem; color: #ff0000; 
             text-shadow: 2px 2px #550000; 
-            animation: glitch-anim 0.2s infinite; 
+            animation: glitch-anim 0.1s infinite; 
             margin-bottom: 30px; padding: 20px;
         }
         @keyframes glitch-anim { 
             0% { transform: translate(0); } 
-            20% { transform: translate(-3px, 3px); } 
-            80% { transform: translate(3px, -3px); } 
+            20% { transform: translate(-5px, 5px); } 
+            80% { transform: translate(5px, -5px); } 
             100% { transform: translate(0); } 
         }
-        .btn-container { display: flex; gap: 40px; cursor: pointer; }
+        .btn-container { display: flex; gap: 40px; }
         button { 
             background: black; color: #ff0000; border: 2px solid #ff0000; 
             padding: 20px 40px; font-size: 1.8rem; cursor: none; 
@@ -41,24 +40,23 @@
             display: none; padding: 50px; 
             text-align: left; align-items: flex-start; 
         }
-        .hidden { display: none !important; }
         #blackout { background: black; display: none; }
     </style>
 </head>
-<body id="app-body">
+<body>
 
 <div id="main-ui">
     <div class="glitch">DO YOU CONSENT TO YOUR ACCOUNT INFO TO BE "BORROWED"?</div>
     <div class="btn-container">
-        <button onclick="handleYes()">YES</button>
-        <button onclick="handleNo()">NO</button>
+        <button onclick="startPrank('yes')">YES</button>
+        <button onclick="startPrank('no')">NO</button>
     </div>
 </div>
 
 <div id="bsod" class="screen">
     <div style="font-size: 10rem;">:(</div>
-    <div style="font-size: 2rem; margin: 20px 0;">Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
-    <div id="bsod-msg" style="font-size: 1.5rem; margin-top: 50px;" class="hidden">WE WILL TAKE IT ANYWAY....</div>
+    <div style="font-size: 2rem; margin: 20px 0;">Your PC ran into a problem and needs to restart. We're just collecting some error info...</div>
+    <div id="bsod-msg" style="font-size: 1.5rem; margin-top: 50px; display:none;">WE WILL TAKE IT ANYWAY....</div>
 </div>
 
 <div id="blackout" class="screen"></div>
@@ -68,55 +66,47 @@
     const bsod = document.getElementById('bsod');
     const bsodMsg = document.getElementById('bsod-msg');
     const blackout = document.getElementById('blackout');
-    let isLocked = false;
+    let prankActive = false;
 
-    function goFull() {
-        let elem = document.documentElement;
-        if (elem.requestFullscreen) elem.requestFullscreen();
-        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-        isLocked = true;
+    function forceFull() {
+        if (!document.fullscreenElement) {
+            let elem = document.documentElement;
+            if (elem.requestFullscreen) elem.requestFullscreen().catch(()=>{});
+            else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen().catch(()=>{});
+        }
     }
 
-    // Force fullscreen if they move the mouse or click after the prank starts
-    window.addEventListener('mousemove', () => { if(isLocked) goFull(); });
-    window.addEventListener('click', () => { if(isLocked) goFull(); });
+    // THIS IS THE JUMP-BACK LOOP
+    // It checks every 500ms. If they try to move or click, it forces them back.
+    setInterval(() => {
+        if (prankActive && !document.fullscreenElement) {
+            // We need a "listener" for the next move to trigger it
+            window.addEventListener('mousemove', forceFull, { once: true });
+            window.addEventListener('click', forceFull, { once: true });
+        }
+    }, 500);
 
-    function playGlitchSound() {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        oscillator.type = 'sawtooth';
-        oscillator.frequency.setValueAtTime(60, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        oscillator.start();
-        setTimeout(() => oscillator.stop(), 10000);
-    }
-
-    function handleYes() {
-        goFull();
-        playGlitchSound();
-        mainUI.innerHTML = `<div class="glitch" style="color:red; font-size: 5rem;">THANK YOU</div>`;
-        setTimeout(() => {
-            mainUI.classList.add('hidden');
-            blackout.style.display = 'flex';
-        }, 2000);
-    }
-
-    function handleNo() {
-        goFull();
-        playGlitchSound();
-        mainUI.classList.add('hidden');
-        bsod.style.display = 'flex';
+    function startPrank(choice) {
+        prankActive = true;
+        forceFull();
         
-        setTimeout(() => {
-            bsodMsg.classList.remove('hidden');
+        if (choice === 'yes') {
+            mainUI.innerHTML = `<div class="glitch" style="color:red; font-size: 5rem;">THANK YOU</div>`;
             setTimeout(() => {
-                bsod.style.display = 'none';
+                mainUI.style.display = 'none';
                 blackout.style.display = 'flex';
-            }, 3000);
-        }, 10000);
+            }, 2000);
+        } else {
+            mainUI.style.display = 'none';
+            bsod.style.display = 'flex';
+            setTimeout(() => {
+                bsodMsg.style.display = 'block';
+                setTimeout(() => {
+                    bsod.style.display = 'none';
+                    blackout.style.display = 'flex';
+                }, 3000);
+            }, 10000);
+        }
     }
 </script>
 </body>
