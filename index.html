@@ -13,29 +13,34 @@
     --mono: "Cascadia Code", "Consolas", monospace;
   }
 
-  /* Page reset */
+  /* Reset */
   html,body{height:100%;margin:0;padding:0;background:var(--bg);overflow:hidden;font-family:var(--mono);color:var(--neon);}
 
-  /* Container */
+  /* Screen */
   #screen{position:fixed;inset:0;background:#000;overflow:hidden;}
 
-  /* INTRO (pixel art feel) */
+  /* Intro (pixel feel) */
   #intro{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;
     background:
       linear-gradient(#050510,#050510),
       url("pixel_cyberpunk_alley_tron_bike.png") center/cover no-repeat;
     image-rendering: pixelated;
   }
-
   #intro-overlay{position:absolute;inset:0;background:radial-gradient(circle at 20% 20%, rgba(77,255,136,0.18), transparent 40%);pointer-events:none;}
 
-  /* Loading dock (thicker) */
+  /* Thick loading dock */
   .loading-dock{position:fixed;left:0;right:0;bottom:0;height:92px;background:rgba(5,5,5,0.98);border-top:4px solid rgba(77,255,136,0.45);display:flex;flex-direction:column;justify-content:center;padding:12px 28px;z-index:8}
   .loading-label{font-family:"Press Start 2P",monospace;font-size:15px;letter-spacing:2px;color:var(--neon);margin-bottom:8px}
   .loading-bar-outer{height:28px;border-radius:999px;border:3px solid var(--neon);overflow:hidden;background:#00110022}
   .loading-bar-inner{height:100%;width:0%;background:linear-gradient(90deg,#1aff66,#00ffaa);box-shadow:0 0 18px rgba(77,255,136,0.45);transition:width 0.18s linear}
 
-  /* Error modal (opaque, large) */
+  /* Extraction overlay (shown when SEND is pressed) */
+  #extract-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.88);z-index:60;flex-direction:column;gap:18px}
+  .extract-msg{font-family:"Press Start 2P",monospace;color:#fff;font-size:18px;letter-spacing:2px;text-align:center}
+  .extract-bar-outer{width:70%;height:28px;border-radius:999px;border:3px solid #fff;overflow:hidden;background:#111}
+  .extract-bar-inner{height:100%;width:0%;background:linear-gradient(90deg,#fff,#ddd);box-shadow:0 0 18px #fff;transition:width 120ms linear}
+
+  /* Error modal */
   #error-modal{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:20;background:rgba(0,0,0,0.6)}
   #error-box{width:620px;background:#f6f6f6;color:#111;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.7);padding:26px;font-family:system-ui}
   #error-title{font-size:26px;font-weight:700;margin-bottom:12px}
@@ -43,30 +48,27 @@
   #error-footer{text-align:right;margin-top:14px}
   .btn{padding:10px 18px;border-radius:6px;border:1px solid #0078d4;background:linear-gradient(#0a84ff,#0060d4);color:#fff;font-weight:600;cursor:pointer}
 
-  /* Terminal (command prompt vibe) */
+  /* Terminal */
   #terminal{position:absolute;inset:0;background:radial-gradient(circle at top,#021a08 0,#000 60%);color:var(--neon);padding:28px;box-sizing:border-box;display:none;overflow:hidden}
   #output{width:100%;height:100%;overflow:hidden;line-height:2;font-size:20px;white-space:pre-wrap;word-break:break-word}
   .line{line-height:2;margin-bottom:6px}
-  /* flashing square cursor */
   .cursor-square{display:inline-block;width:14px;height:18px;background:var(--neon);vertical-align:middle;margin-left:6px;animation:blinkSquare 0.7s steps(1) infinite}
   @keyframes blinkSquare{0%,49%{opacity:1}50%,100%{opacity:0}}
 
-  /* Choice dialog (send/decline) */
+  /* Choice dialog */
   #choice-dialog{position:absolute;inset:0;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;z-index:30}
   #choice-box{background:#050505;border:2px solid var(--neon);padding:22px;color:var(--neon);width:640px;border-radius:8px;box-shadow:0 0 30px rgba(0,255,136,0.12);font-size:18px;line-height:2}
   #choice-buttons{display:flex;justify-content:flex-end;gap:12px;margin-top:8px}
   .choice-btn{background:#001100;border:1px solid var(--neon);color:var(--neon);padding:10px 18px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:16px}
 
-  /* Cancel button (only shown in send flow) */
+  /* Cancel button (only in send flow) */
   #cancel-btn{position:fixed;top:18px;right:18px;padding:10px 16px;background:#330000;color:#ff8b8b;border:1px solid #ff6666;border-radius:6px;font-family:var(--mono);font-size:16px;cursor:pointer;display:none;z-index:40;box-shadow:0 0 18px rgba(255,0,0,0.12)}
 
-  /* Popups (glitchy) */
-  .popup{position:absolute;width:300px;background:#0f0f12;color:#fff;border-radius:8px;padding:10px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 12px 30px rgba(0,0,0,0.7);pointer-events:none;z-index:45;opacity:0;transform:scale(0.96);animation:popupIn 0.28s forwards}
-  .popup .h{font-weight:700;margin-bottom:6px}
-  .popup .b{font-size:13px;line-height:1.6}
-  @keyframes popupIn{0%{opacity:0;transform:translate(0,0) scale(0.96)}40%{opacity:1;transform:translate(-6px,4px) scale(1.02)}100%{opacity:1;transform:translate(0,0) scale(1)}}
+  /* Glitch white popups & flashes (violent hacking) */
+  .white-flash{position:fixed;left:0;top:0;right:0;bottom:0;background:#fff;opacity:0;z-index:120;pointer-events:none;transition:opacity 80ms linear}
+  .white-popup{position:fixed;background:#fff;color:#000;border-radius:6px;padding:8px 10px;box-shadow:0 12px 30px rgba(0,0,0,0.6);z-index:130;pointer-events:none;opacity:0;transform:scale(0.98);transition:opacity 80ms linear, transform 120ms linear}
 
-  /* BSOD (only shown on decline path) */
+  /* BSOD (only on decline) - pixel art style placeholder, QR image used inside */
   #bsod{position:absolute;inset:0;background:var(--bsod);color:#fff;font-family:Segoe UI,system-ui;display:none;flex-direction:column;padding:80px 100px;box-sizing:border-box;z-index:50}
   #bsod-face{font-size:72px;margin-bottom:18px}
   #bsod-text{font-size:22px;line-height:1.9;margin-bottom:18px;max-width:760px}
@@ -75,22 +77,18 @@
   #bsod-qr{width:140px;height:140px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:6px}
   #bsod-qr img{width:100%;height:100%;object-fit:cover}
   #bsod-info{font-size:15px;line-height:1.9}
-  /* spinning dots (loading) */
   .bsod-dots{display:flex;gap:10px;margin-top:22px}
   .dot{width:12px;height:12px;border-radius:50%;border:2px solid #fff;border-top-color:transparent;animation:spin 1s linear infinite}
-  .dot:nth-child(2){animation-delay:0.08s}.dot:nth-child(3){animation-delay:0.16s}.dot:nth-child(4){animation-delay:0.24s}
   @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-
-  /* BSOD bottom log (C style file text) */
   #bsod-log{position:absolute;left:80px;right:80px;bottom:40px;font-family:var(--mono);font-size:13px;color:#eaf6ff;white-space:pre;line-height:1.9;opacity:0.95}
 
-  /* Fix button after meltdown */
-  #fix-btn{position:fixed;right:18px;bottom:18px;padding:10px 14px;background:#001100;color:var(--neon);border:1px solid var(--neon);border-radius:6px;cursor:pointer;display:none;z-index:60}
+  /* Fix button scaled to 0.75 */
+  #fix-btn{position:fixed;right:18px;bottom:18px;padding:10px 14px;background:#001100;color:var(--neon);border:1px solid var(--neon);border-radius:6px;cursor:pointer;display:none;z-index:60;transform:scale(0.75);transform-origin:center}
 
   /* Final overlay */
   #final-overlay{position:absolute;inset:0;background:#000;color:var(--neon);display:none;align-items:center;justify-content:center;font-size:22px;font-family:var(--mono);z-index:70;line-height:2}
 
-  /* small helpers */
+  /* Helpers */
   .hidden{display:none!important}
 </style>
 </head>
@@ -100,7 +98,6 @@
   <!-- Intro -->
   <div id="intro">
     <div id="intro-overlay"></div>
-
     <div style="padding:28px;color:var(--neon);font-family:'Press Start 2P',monospace;text-align:center;z-index:2">
       <div style="font-size:30px;letter-spacing:4px;margin-bottom:12px">LOADING&nbsp;&nbsp;VIPERX&nbsp;QUEST</div>
       <div style="font-size:14px;margin-bottom:18px">BETA EDITION</div>
@@ -127,12 +124,12 @@
     </div>
   </div>
 
-  <!-- Terminal (command prompt vibe) -->
+  <!-- Terminal -->
   <div id="terminal" aria-live="polite">
     <div id="output" role="status"></div>
   </div>
 
-  <!-- Choice dialog (SEND / DECLINE) -->
+  <!-- Choice dialog -->
   <div id="choice-dialog">
     <div id="choice-box">
       <div id="choice-text"></div>
@@ -146,7 +143,14 @@
   <!-- Cancel (only for send flow) -->
   <button id="cancel-btn">CANCEL</button>
 
-  <!-- BSOD (only on decline path) -->
+  <!-- Extraction overlay (SEND path) -->
+  <div id="extract-overlay" aria-hidden="true">
+    <div class="extract-msg" id="extract-msg">YOU ARE NOW BEING HACKED</div>
+    <div class="extract-bar-outer"><div class="extract-bar-inner" id="extract-bar"></div></div>
+    <div style="color:#ddd;font-family:var(--mono);font-size:13px">EXTRACTING: GENERAL SYSTEM LOGS · NON-PERSONAL CACHE</div>
+  </div>
+
+  <!-- BSOD (only on decline) -->
   <div id="bsod">
     <div id="bsod-face">:(</div>
     <div id="bsod-text">Your device ran into a problem and needs to restart. We're collecting error info and will restart for you.</div>
@@ -177,6 +181,9 @@ int main(void){
     </div>
   </div>
 
+  <!-- White flash overlay (for violent hacking) -->
+  <div id="white-flash" class="white-flash"></div>
+
   <!-- Fix and final -->
   <button id="fix-btn">FIX</button>
   <div id="final-overlay">YOUR ACCOUNT HAS BEEN SAVED.<br><br>THOUGH WE STILL HAVE YOUR DATA. BYE!</div>
@@ -198,8 +205,15 @@ int main(void){
   const choiceNo = document.getElementById('choice-no');   // DECLINE
 
   const cancelBtn = document.getElementById('cancel-btn');
+  const extractOverlay = document.getElementById('extract-overlay');
+  const extractBar = document.getElementById('extract-bar');
+  const extractMsg = document.getElementById('extract-msg');
+
   const bsod = document.getElementById('bsod');
   const bsodProgress = document.getElementById('bsod-progress');
+
+  const whiteFlash = document.getElementById('white-flash');
+
   const fixBtn = document.getElementById('fix-btn');
   const finalOverlay = document.getElementById('final-overlay');
 
@@ -207,17 +221,17 @@ int main(void){
   let cancelVisible = false;
   let meltdown = false;
   let declinePath = false;
+  let calmInterval = null;
+  let aggressiveInterval = null;
 
   /* Utilities */
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  /* Terminal helpers: bigger, double-spaced, C-like code and real-looking logs */
   function appendLine(text=''){
     const d = document.createElement('div');
     d.className = 'line';
     d.textContent = text;
     output.appendChild(d);
-    // keep terminal scrolled to bottom (no page scroll)
     output.scrollTop = output.scrollHeight;
     return d;
   }
@@ -226,31 +240,22 @@ int main(void){
     const d = document.createElement('div');
     d.className = 'line';
     output.appendChild(d);
-    let i=0;
-    while(i<=text.length){
+    for(let i=0;i<=text.length;i++){
       d.textContent = text.slice(0,i);
       output.scrollTop = output.scrollHeight;
-      i++;
       await sleep(speed);
     }
     return d;
   }
 
-  function showChoice(message){
-    return new Promise(res=>{
-      choiceText.textContent = message;
-      choiceDialog.style.display = 'flex';
-      choiceYes.onclick = ()=>{ choiceDialog.style.display='none'; res('SEND'); };
-      choiceNo.onclick = ()=>{ choiceDialog.style.display='none'; res('DECLINE'); };
-    });
+  function ensureCursor(){
+    const existing = document.querySelector('.cursor-square');
+    if(existing) existing.remove();
+    const span = document.createElement('span');
+    span.className = 'cursor-square';
+    const last = output.lastElementChild;
+    if(last) last.appendChild(span); else appendLine('').appendChild(span);
   }
-
-  /* Prevent scrolling via keys */
-  window.addEventListener('keydown', e=>{
-    if(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(e.key)){
-      e.preventDefault();
-    }
-  }, {capture:true});
 
   /* Intro progress */
   (async function runIntro(){
@@ -265,31 +270,67 @@ int main(void){
     errorModal.style.display = 'flex';
   })();
 
-  /* Fullscreen helper (attempt) */
   async function goFullscreen(){
+    try{ if(document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); }catch(e){}
+  }
+
+  /* Choice dialog helper */
+  function showChoice(message){
+    return new Promise(res=>{
+      choiceText.textContent = message;
+      choiceDialog.style.display = 'flex';
+      choiceYes.onclick = ()=>{ choiceDialog.style.display='none'; res('SEND'); };
+      choiceNo.onclick = ()=>{ choiceDialog.style.display='none'; res('DECLINE'); };
+    });
+  }
+
+  /* White popup helper (used only in violent hacking/decline) */
+  function spawnWhitePopup(){
+    const p = document.createElement('div');
+    p.className = 'white-popup';
+    p.style.left = (Math.random()*(window.innerWidth-260)) + 'px';
+    p.style.top = (Math.random()*(window.innerHeight-160)) + 'px';
+    p.style.opacity = '1';
+    p.style.transform = 'scale(1)';
+    const msgs = [
+      'UNHANDLED EXCEPTION',
+      'WINDOWS RENDER FAILURE',
+      'SCRIPT CRASHED',
+      'UI LAYER COLLAPSE'
+    ];
+    p.textContent = msgs[Math.floor(Math.random()*msgs.length)];
+    document.getElementById('screen').appendChild(p);
+    setTimeout(()=>{ p.style.opacity='0'; p.style.transform='scale(0.98)'; }, 300 + Math.random()*600);
+    setTimeout(()=>p.remove(), 900 + Math.random()*700);
+  }
+
+  /* Flash + popup + sound for violent hacking */
+  function spawnWhiteFlashAndPopup(){
+    whiteFlash.style.opacity = '0.95';
+    setTimeout(()=>{ whiteFlash.style.opacity = '0'; }, 80 + Math.random()*160);
+    spawnWhitePopup();
+    playBurst();
+  }
+
+  /* Sound: short harsh burst for violent hacking */
+  function playBurst(){
     try{
-      if(document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'square';
+      o.frequency.value = 220 + Math.random()*880;
+      g.gain.value = 0.0001;
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.start();
+      g.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+      setTimeout(()=>{ o.stop(); ctx.close(); }, 220);
     }catch(e){}
   }
 
-  /* Cursor: square appended to terminal output when active */
-  function ensureCursor(){
-    // remove existing cursor
-    const existing = document.querySelector('.cursor-square');
-    if(existing) existing.remove();
-    const span = document.createElement('span');
-    span.className = 'cursor-square';
-    // append to last line or create one
-    const last = output.lastElementChild;
-    if(last){
-      last.appendChild(span);
-    }else{
-      const l = appendLine('');
-      l.appendChild(span);
-    }
-  }
-
-  /* Hacking content: more realistic C-like code, fewer forward slashes, backslashes for Windows paths */
+  /* Logs */
   const calmLogs = [
     'C:\\System\\Logs\\core_0001.log - OPEN',
     'C:\\System\\Config\\session.cfg - READ',
@@ -314,32 +355,7 @@ int main(void){
     '>>> MEMORY MAP DESYNC'
   ];
 
-  /* Popup generator (web-breaking simulation) */
-  function spawnPopup(){
-    const p = document.createElement('div');
-    p.className = 'popup';
-    const h = document.createElement('div'); h.className='h';
-    const b = document.createElement('div'); b.className='b';
-    const titles = ['SIMULATED ERROR','CONNECTION GLITCH','WEB BREAK NOTICE','UI RENDER WARNING'];
-    const bodies = [
-      'ERR_CONNECTION_RESET',
-      'UNHANDLED SCRIPT EXCEPTION',
-      'OVERRIDE_HANDLER.EXE NOT RESPONDING',
-      'FAKE STACKTRACE STREAMING'
-    ];
-    h.textContent = titles[Math.floor(Math.random()*titles.length)];
-    b.textContent = bodies[Math.floor(Math.random()*bodies.length)];
-    p.appendChild(h); p.appendChild(b);
-    const x = Math.random()*(window.innerWidth-320);
-    const y = Math.random()*(window.innerHeight-220);
-    p.style.left = x + 'px'; p.style.top = y + 'px';
-    document.getElementById('screen').appendChild(p);
-    // fade out and remove
-    setTimeout(()=>{ p.style.opacity='0'; p.style.transform='scale(0.98)'; }, 1800 + Math.random()*1200);
-    setTimeout(()=>p.remove(), 2600 + Math.random()*1400);
-  }
-
-  /* Start hacking: terminal shows realistic C-like code and file reads, cursor is square */
+  /* Start terminal flow (after RUN ANTIVIRUS) */
   async function startTerminalFlow(){
     await goFullscreen();
     errorModal.style.display = 'none';
@@ -354,9 +370,6 @@ int main(void){
     await typeLine('ANALYZING KERNEL HOOKS...', 10);
     await sleep(220);
     appendLine('');
-    await sleep(200);
-
-    // clear and show the "we will borrow your information" message as a C-style comment then prompt
     await typeLine('/* REMOTE PROCESS REQUEST: TEMPORARY ACCESS REQUIRED */', 8);
     await sleep(180);
     await typeLine('C:\\System\\ViperX> OPEN "C:\\System\\Logs\\core_0001.log"', 8);
@@ -366,53 +379,68 @@ int main(void){
     appendLine('');
     ensureCursor();
 
-    // show choice
     await sleep(600);
     const choice = await showChoice('A REMOTE PROCESS IS REQUESTING TEMPORARY ACCESS TO GENERAL SYSTEM LOGS.\n\nCHOOSE: SEND DATA  OR  DECLINE');
     if(choice === 'SEND'){
-      declinePath = false;
       startSendFlow();
     } else {
-      declinePath = true;
       startDeclineFlow();
     }
   }
 
-  /* Send flow: shows cancel button, calmer logs, no BSOD unless user cancels */
-  let calmInterval = null;
+  /* SEND flow: immediate "YOU ARE NOW BEING HACKED", extraction bar, NO popups, no BSOD */
   function startSendFlow(){
+    declinePath = false;
+    // show cancel button (only for send)
     cancelBtn.style.display = 'block';
     cancelVisible = true;
-    appendLine('');
-    typeLine('> USER SELECTION: SEND DATA', 8);
-    typeLine('> STARTING REMOTE EXTRACTION PIPELINE...', 8);
-    // run calm logs
-    calmInterval = setInterval(()=>{
-      const l = calmLogs[Math.floor(Math.random()*calmLogs.length)];
-      appendLine(l);
-      if(Math.random() < 0.18) spawnPopup();
-      ensureCursor();
-    }, 420);
-    // after some time, show a subtle warning but do NOT BSOD
-    setTimeout(async ()=>{
-      appendLine('');
-      await typeLine('WARNING: INTEGRITY CHECK - LATENCY SPIKE DETECTED', 10);
-      await sleep(400);
-      appendLine('');
-      // continue calm logs; user can cancel to trigger different path
-    }, 6000);
+
+    // show extraction overlay
+    extractOverlay.style.display = 'flex';
+    extractBar.style.width = '0%';
+    extractMsg.textContent = 'YOU ARE NOW BEING HACKED';
+
+    // subtle tone to indicate activity
+    playBurst();
+
+    // animate extraction bar to simulate extraction (no popups)
+    let p = 0;
+    const t = setInterval(()=>{
+      p += 1 + Math.random()*3; // steady progress
+      if(p > 100) p = 100;
+      extractBar.style.width = p + '%';
+      if(p >= 100){
+        clearInterval(t);
+        // extraction complete: hide overlay, show calm logs and final overlay later
+        setTimeout(async ()=>{
+          extractOverlay.style.display = 'none';
+          appendLine('');
+          await typeLine('> EXTRACTION COMPLETE. TRANSFER LOGGED.', 10);
+          // continue calm logs for a bit (no popups)
+          calmInterval = setInterval(()=>{
+            const l = calmLogs[Math.floor(Math.random()*calmLogs.length)];
+            appendLine(l);
+            ensureCursor();
+          }, 420);
+          // show fix button after some time
+          setTimeout(()=>{ fixBtn.style.display = 'block'; }, 4200);
+        }, 700);
+      }
+    }, 120);
   }
 
-  /* Decline flow: taunt, aggressive logs, spawn many popups, then BSOD/meltdown */
-  let aggressiveInterval = null;
+  /* DECLINE flow: taunt, aggressive logs, flashes, white popups, sounds, then BSOD (pixel style) */
   async function startDeclineFlow(){
-    // ensure cancel not visible
+    declinePath = true;
+    // ensure cancel hidden
     cancelBtn.style.display = 'none';
     cancelVisible = false;
+
     appendLine('');
     await typeLine('> USER SELECTION: DECLINE', 10);
     await sleep(300);
-    await typeLine('FINE. WE WILL DELETE YOUR DATA THEN...', 12);
+    // taunt exactly as requested
+    await typeLine('FINE. WE WILL NOT TAKE YOUR DATA BUT YOU WILL LOSE IT.....', 14);
     await sleep(900);
     await typeLine('JUST KIDDING.', 14);
     await sleep(700);
@@ -420,22 +448,24 @@ int main(void){
     await sleep(700);
     await typeLine('FORCING REMOTE EXTRACTION AND SIMULATING WEB BREAK...', 12);
     appendLine('');
-    // aggressive logs flood
+
+    // start aggressive flood + flashes + white popups + sounds
     aggressiveInterval = setInterval(()=>{
       const l = aggressiveLogs[Math.floor(Math.random()*aggressiveLogs.length)];
       appendLine(l);
-      if(Math.random() < 0.6) spawnPopup();
+      if(Math.random() < 0.7) spawnWhiteFlashAndPopup();
       ensureCursor();
     }, 80);
-    // after a short time, trigger BSOD (only on decline)
+
+    // after short time, show BSOD (pixel style) for decline path
     setTimeout(()=>{ triggerBsod(); }, 4200);
   }
 
-  /* Cancel button behavior (only present in send flow) */
+  /* Cancel button behavior (only in send flow) */
   cancelBtn.addEventListener('click', async ()=>{
     if(!cancelVisible || meltdown) return;
     // stop calm logs
-    if(calmInterval) { clearInterval(calmInterval); calmInterval = null; }
+    if(calmInterval){ clearInterval(calmInterval); calmInterval = null; }
     cancelBtn.style.display = 'none';
     cancelVisible = false;
 
@@ -450,42 +480,48 @@ int main(void){
     });
 
     if(ans){
-      // user confirmed cancel -> start meltdown (aggressive) and then BSOD
       appendLine('');
       await typeLine('CANCELLATION ACCEPTED. SYSTEM OVERRIDE INITIATED.', 10);
       await sleep(600);
+      // escalate to violent hacking (flashes/popups/sounds) then BSOD
       startMeltdownFromCancel();
     } else {
-      // resume calm logs
       appendLine('');
       await typeLine('CANCELLATION DENIED. RESUMING EXTRACTION.', 10);
-      startSendFlow();
+      // resume calm logs
+      calmInterval = setInterval(()=>{
+        const l = calmLogs[Math.floor(Math.random()*calmLogs.length)];
+        appendLine(l);
+        ensureCursor();
+      }, 420);
     }
   });
 
-  /* Meltdown triggered by cancel (send flow) */
+  /* Meltdown from cancel: behave like decline's violent hacking but triggered by user cancel */
   function startMeltdownFromCancel(){
     meltdown = true;
-    // aggressive flood
+    if(calmInterval){ clearInterval(calmInterval); calmInterval = null; }
     aggressiveInterval = setInterval(()=>{
       const l = aggressiveLogs[Math.floor(Math.random()*aggressiveLogs.length)];
       appendLine(l);
-      if(Math.random() < 0.5) spawnPopup();
+      if(Math.random() < 0.6) spawnWhiteFlashAndPopup();
       ensureCursor();
     }, 90);
-    // after a short time, trigger BSOD (this is user-initiated cancel path)
     setTimeout(()=>{ triggerBsod(); }, 3000);
   }
 
-  /* Trigger BSOD (only called from decline path or cancel-initiated meltdown) */
+  /* Trigger BSOD (only for decline or cancel-initiated meltdown) */
   async function triggerBsod(){
-    // stop any intervals
+    // stop intervals
     if(calmInterval){ clearInterval(calmInterval); calmInterval = null; }
     if(aggressiveInterval){ clearInterval(aggressiveInterval); aggressiveInterval = null; }
     meltdown = true;
+
+    // show BSOD (pixel art style) only for decline/meltdown
     terminal.style.display = 'none';
     bsod.style.display = 'flex';
-    // animate progress with spinning dots visible
+
+    // animate progress with dots
     let p = 0;
     while(p < 99.99){
       p += Math.random()*7 + 2;
@@ -493,8 +529,9 @@ int main(void){
       bsodProgress.textContent = p.toFixed(3) + '% complete';
       await sleep(240 + Math.random()*240);
     }
+
     await sleep(700);
-    // show a brief fatal overlay then return to terminal and continue flooding (simulated)
+    // brief fatal overlay
     const overlay = document.createElement('div');
     overlay.style.position='fixed'; overlay.style.inset='0'; overlay.style.background='rgba(255,0,0,0.06)';
     overlay.style.display='flex'; overlay.style.alignItems='center'; overlay.style.justifyContent='center';
@@ -502,17 +539,19 @@ int main(void){
     document.body.appendChild(overlay);
     await sleep(1200);
     document.body.removeChild(overlay);
-    // keep BSOD visible for a moment then hide and resume terminal meltdown logs
+
+    // keep BSOD visible briefly then return to terminal with aggressive flood continuing
     await sleep(600);
     bsod.style.display = 'none';
     terminal.style.display = 'block';
-    // resume aggressive flood to simulate continuing override
+
     aggressiveInterval = setInterval(()=>{
       const l = aggressiveLogs[Math.floor(Math.random()*aggressiveLogs.length)];
       appendLine(l);
-      if(Math.random() < 0.6) spawnPopup();
+      if(Math.random() < 0.6) spawnWhiteFlashAndPopup();
       ensureCursor();
     }, 70);
+
     // show fix button after a while
     setTimeout(()=>{ fixBtn.style.display = 'block'; }, 3000);
   }
@@ -525,7 +564,6 @@ int main(void){
     await sleep(600);
     finalOverlay.style.display = 'flex';
     await sleep(1800);
-    // exit fullscreen if present
     try{ if(document.fullscreenElement) await document.exitFullscreen(); }catch(e){}
   });
 
@@ -534,13 +572,13 @@ int main(void){
     await startTerminalFlow();
   });
 
-  /* Ensure initial cursor present if terminal becomes active */
+  /* Ensure cursor present */
   setInterval(()=>{ if(terminal.style.display !== 'none') ensureCursor(); }, 1200);
 
-  /* Accessibility: keyboard shortcuts to trigger flows for testing (no scrolling) */
+  /* Keyboard debug shortcuts (no scrolling) */
   window.addEventListener('keydown', e=>{
-    if(e.key === '1'){ /* debug: send */ startSendFlow(); }
-    if(e.key === '2'){ /* debug: decline */ startDeclineFlow(); }
+    if(e.key === '1'){ startSendFlow(); }
+    if(e.key === '2'){ startDeclineFlow(); }
   });
 </script>
 </body>
