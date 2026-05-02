@@ -1,916 +1,745 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>ViperX Quest BETA</title>
 <style>
-    html, body {
+    :root {
+        --bg-dark: #05060a;
+        --neon-green: #4dff88;
+        --neon-green-soft: #2adf6a;
+        --error-red: #ff3b3b;
+        --soft-white: #f5f5f5;
+        --blue-screen: #0078d7;
+        --popup-bg: #111319;
+        --pixel-font: "Press Start 2P", system-ui, sans-serif;
+        --mono-font: "Cascadia Code", "Consolas", monospace;
+    }
+
+    * {
+        box-sizing: border-box;
         margin: 0;
         padding: 0;
-        background: #000;
-        color: #0f0;
-        font-family: "Consolas", "Courier New", monospace;
+    }
+
+    html, body {
+        width: 100%;
         height: 100%;
-        overflow: hidden;
-    }
-
-    #screen {
-        position: fixed;
-        inset: 0;
+        overflow: hidden; /* no scrolling */
         background: #000;
+        color: var(--soft-white);
+        font-family: var(--mono-font);
     }
 
-    .hidden {
-        display: none !important;
-    }
-
-    /* PIXEL CYBERPUNK INTRO */
-    #intro {
-        position: absolute;
-        inset: 0;
-        background:
-            linear-gradient(#050510, #050510),
-            url("pixel_cyberpunk_alley_tron_bike.png") center/cover no-repeat;
-        image-rendering: pixelated;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        align-items: stretch;
-    }
-
-    #intro-overlay {
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at top, #00ff8844 0, transparent 50%);
-        pointer-events: none;
-    }
-
-    #intro-loading-bar {
-        position: relative;
-        height: 60px;
-        background: #050505dd;
-        border-top: 2px solid #00ff88;
+    body {
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #00ff88;
-        font-family: "Press Start 2P", system-ui, sans-serif;
-        font-size: 11px;
-        letter-spacing: 1px;
     }
 
-    #intro-progress {
+    /* Shared containers */
+    .screen {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+        overflow: hidden;
+    }
+
+    /* Futuristic alleyway + Tron bike (stylized) */
+    .intro-bg {
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 20% 80%, rgba(77,255,136,0.35), transparent 55%),
+            radial-gradient(circle at 80% 20%, rgba(77,255,136,0.25), transparent 55%),
+            linear-gradient(to top, #020308 0%, #05060a 40%, #0b0f1a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .alley-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(to right, rgba(0,255,128,0.15) 1px, transparent 1px),
+            linear-gradient(to top, rgba(0,255,128,0.15) 1px, transparent 1px);
+        background-size: 40px 40px;
+        opacity: 0.35;
+        transform: perspective(600px) rotateX(70deg) translateY(20vh);
+        transform-origin: center bottom;
+    }
+
+    .tron-bike {
+        position: absolute;
+        bottom: 18%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 260px;
+        height: 120px;
+        border-radius: 60px;
+        border: 4px solid var(--neon-green);
+        box-shadow: 0 0 25px var(--neon-green-soft);
+    }
+
+    .tron-wheel {
+        position: absolute;
+        bottom: -40px;
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        border: 6px solid var(--neon-green);
+        box-shadow: 0 0 25px var(--neon-green-soft);
+    }
+
+    .tron-wheel.left {
+        left: 10px;
+    }
+
+    .tron-wheel.right {
+        right: 10px;
+    }
+
+    .tron-core {
+        position: absolute;
+        inset: 18px 40px;
+        border-radius: 40px;
+        border: 3px solid rgba(77,255,136,0.7);
+        box-shadow: inset 0 0 18px rgba(77,255,136,0.7);
+    }
+
+    /* Pixel text intro */
+    .intro-content {
+        position: relative;
+        text-align: center;
+        z-index: 2;
+        color: var(--soft-white);
+        text-shadow: 0 0 6px #000;
+    }
+
+    .intro-title {
+        font-family: var(--pixel-font);
+        font-size: 32px;
+        letter-spacing: 4px;
+        margin-bottom: 24px;
+    }
+
+    .intro-sub {
+        font-family: var(--pixel-font);
+        font-size: 18px;
+        margin-bottom: 40px;
+    }
+
+    .intro-line {
+        font-family: var(--pixel-font);
+        font-size: 14px;
+        margin-bottom: 18px;
+    }
+
+    /* Thick loading bar at bottom */
+    .loading-dock {
         position: absolute;
         left: 0;
+        right: 0;
         bottom: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #00ff88, #00ffff);
-        width: 0%;
-        transition: width 0.3s linear;
+        height: 80px;
+        background: rgba(5, 6, 10, 0.96);
+        border-top: 2px solid rgba(77,255,136,0.4);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 10px 40px;
+        gap: 10px;
     }
 
-    /* ERROR MODAL */
-    #error-modal {
+    .loading-label {
+        font-family: var(--pixel-font);
+        font-size: 14px;
+        letter-spacing: 2px;
+    }
+
+    .loading-bar-outer {
+        width: 100%;
+        height: 22px;
+        border-radius: 999px;
+        border: 2px solid var(--neon-green);
+        padding: 2px;
+        overflow: hidden;
+    }
+
+    .loading-bar-inner {
+        width: 0%;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #1aff66, #00ffaa, #1aff66);
+        box-shadow: 0 0 12px var(--neon-green-soft);
+        transition: width 0.2s linear;
+    }
+
+    /* Error modal */
+    .error-modal {
         position: absolute;
         inset: 0;
         display: none;
         align-items: center;
         justify-content: center;
+        background: rgba(0,0,0,0.55);
+        z-index: 10;
     }
 
-    #error-box {
-        width: 420px;
-        background: #f5f5f5;
-        border-radius: 6px;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-        border: 1px solid #ccc;
-        color: #222;
-        font-family: "Segoe UI", system-ui, sans-serif;
-        padding: 18px 20px 16px;
+    .error-box {
+        width: 520px;
+        background: #f2f2f2;
+        color: #111;
+        border-radius: 10px;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+        border: 1px solid #c0c0c0;
+        overflow: hidden;
+        font-family: system-ui, sans-serif;
     }
 
-    #error-title {
-        font-size: 18px;
+    .error-header {
+        background: linear-gradient(to right, #e6e6e6, #fdfdfd);
+        padding: 14px 18px;
         font-weight: 600;
-        margin-bottom: 8px;
+        font-size: 16px;
+        border-bottom: 1px solid #d0d0d0;
     }
 
-    #error-body {
-        font-size: 13px;
-        margin-bottom: 18px;
+    .error-body {
+        padding: 20px 22px 10px;
+        font-size: 15px;
+        line-height: 1.6;
     }
 
-    #error-footer {
-        text-align: right;
+    .error-body strong {
+        color: #b00000;
+    }
+
+    .error-footer {
+        padding: 14px 18px 18px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
     }
 
     .btn {
-        padding: 6px 14px;
+        min-width: 130px;
+        padding: 8px 16px;
         border-radius: 4px;
-        border: 1px solid #0078d4;
-        background: #0078d4;
-        color: #fff;
-        font-size: 13px;
+        border: 1px solid #b0b0b0;
+        background: #f8f8f8;
+        font-size: 14px;
         cursor: pointer;
     }
 
-    .btn:active {
-        transform: translate(1px,1px);
+    .btn-primary {
+        background: #0078d7;
+        border-color: #0063b1;
+        color: #fff;
     }
 
-    /* TERMINAL */
-    #terminal {
+    .btn-primary:hover {
+        background: #0063b1;
+    }
+
+    /* Hacking / web-breaking screen */
+    .hack-screen {
         position: absolute;
         inset: 0;
-        background: #000;
-        color: #0f0;
-        padding: 14px;
-        box-sizing: border-box;
+        background: radial-gradient(circle at top, #0b1b0f, #020403 70%);
+        color: #b6ffce;
+        display: none;
+        font-family: var(--mono-font);
+    }
+
+    .hack-console {
+        position: absolute;
+        inset: 40px 40px 120px 40px;
+        background: rgba(0,0,0,0.75);
+        border-radius: 10px;
+        border: 1px solid rgba(77,255,136,0.4);
+        padding: 18px 20px;
+        overflow: hidden;
+    }
+
+    .hack-title {
         font-size: 16px;
-        white-space: pre;
-        overflow: hidden;
+        margin-bottom: 16px;
+        color: var(--neon-green);
     }
 
-    #output {
-        width: 100%;
+    .hack-log {
+        font-size: 14px;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        overflow: hidden;
         height: 100%;
-        overflow: hidden;
     }
 
-    .line {
-        line-height: 1.3;
-    }
-
-    #cursor {
+    .cursor {
         display: inline-block;
         width: 10px;
-        height: 18px;
-        background: #0f0;
-        margin-left: 2px;
-        animation: blink 0.7s steps(1) infinite;
+        background: var(--neon-green);
+        margin-left: 4px;
+        animation: blink 0.8s steps(1) infinite;
     }
 
     @keyframes blink {
-        0%, 49% { opacity: 1; }
-        50%, 100% { opacity: 0; }
+        0%, 50% { opacity: 1; }
+        50.01%, 100% { opacity: 0; }
     }
 
-    /* CHOICE DIALOG */
-    #choice-dialog {
+    /* Glitch popups */
+    .popup {
+        position: absolute;
+        width: 260px;
+        background: var(--popup-bg);
+        color: #f8f8f8;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.15);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.7);
+        padding: 10px 12px 12px;
+        font-size: 12px;
+        pointer-events: none;
+        opacity: 0;
+        transform: scale(0.9);
+        animation: popup-glitch 1.2s ease-out forwards;
+    }
+
+    .popup-title {
+        font-weight: 600;
+        margin-bottom: 6px;
+        font-size: 12px;
+    }
+
+    .popup-body {
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+    @keyframes popup-glitch {
+        0% { opacity: 0; transform: translate(0,0) scale(0.9); }
+        20% { opacity: 1; transform: translate(-4px,2px) scale(1.02); }
+        40% { transform: translate(3px,-3px) scale(1); }
+        60% { transform: translate(-2px,1px) scale(1.01); }
+        100% { opacity: 1; transform: translate(0,0) scale(1); }
+    }
+
+    /* Accept screen with only CANCEL */
+    .accept-screen {
         position: absolute;
         inset: 0;
-        background: #000000dd;
+        background: rgba(0,0,0,0.8);
         display: none;
         align-items: center;
         justify-content: center;
         z-index: 20;
     }
 
-    #choice-box {
-        background: #050505;
-        border: 1px solid #0f0;
-        padding: 16px;
-        max-width: 520px;
-        color: #0f0;
+    .accept-box {
+        width: 480px;
+        background: #fdfdfd;
+        color: #111;
+        border-radius: 10px;
+        border: 1px solid #c0c0c0;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.7);
+        overflow: hidden;
+        font-family: system-ui, sans-serif;
+    }
+
+    .accept-header {
+        padding: 14px 18px;
+        font-weight: 600;
+        font-size: 16px;
+        border-bottom: 1px solid #d0d0d0;
+        background: linear-gradient(to right, #f0f0f0, #ffffff);
+    }
+
+    .accept-body {
+        padding: 20px 22px 10px;
         font-size: 15px;
+        line-height: 1.7;
     }
 
-    #choice-buttons {
-        margin-top: 12px;
-        text-align: right;
+    .accept-footer {
+        padding: 14px 18px 18px;
+        display: flex;
+        justify-content: flex-end;
     }
 
-    .choice-btn {
-        padding: 6px 12px;
-        margin-left: 8px;
-        background: #001100;
-        color: #0f0;
-        border: 1px solid #0f0;
-        cursor: pointer;
-        font-family: "Consolas", monospace;
+    .btn-cancel-only {
+        min-width: 130px;
+        padding: 8px 16px;
+        border-radius: 4px;
+        border: 1px solid #b0b0b0;
+        background: #f8f8f8;
         font-size: 14px;
-    }
-
-    /* CANCEL BUTTON */
-    #cancel-btn {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        padding: 7px 14px;
-        background: #330000;
-        color: #ff6666;
-        border: 1px solid #ff6666;
-        font-family: "Consolas", monospace;
-        font-size: 13px;
         cursor: pointer;
-        display: none;
-        z-index: 15;
     }
 
-    /* BSOD */
-    #bsod {
+    .btn-cancel-only:hover {
+        background: #e8e8e8;
+    }
+
+    /* Blue screen of death */
+    .bsod {
         position: absolute;
         inset: 0;
-        background: #0078d7;
-        color: #fff;
+        background: var(--blue-screen);
+        color: #ffffff;
         font-family: "Segoe UI", system-ui, sans-serif;
         display: none;
-        flex-direction: column;
-        justify-content: center;
-        align-items: flex-start;
-        padding: 60px 80px;
-        box-sizing: border-box;
+        padding: 80px 120px;
     }
 
-    #bsod-face {
-        font-size: 72px;
+    .bsod-face {
+        font-size: 64px;
+        margin-bottom: 30px;
+    }
+
+    .bsod-main {
+        font-size: 22px;
         margin-bottom: 24px;
     }
 
-    #bsod-text {
-        font-size: 20px;
-        max-width: 640px;
-        margin-bottom: 24px;
-    }
-
-    #bsod-progress {
-        font-size: 18px;
+    .bsod-sub {
+        font-size: 16px;
         margin-bottom: 40px;
+        max-width: 640px;
     }
 
-    #bsod-bottom {
+    .bsod-row {
         display: flex;
         gap: 40px;
-        align-items: center;
+        align-items: flex-start;
     }
 
-    #bsod-qr {
-        width: 120px;
-        height: 120px;
-        background: #fff;
+    .bsod-qr {
+        width: 140px;
+        height: 140px;
+        background:
+            linear-gradient(90deg, #fff 10px, transparent 10px),
+            linear-gradient(180deg, #fff 10px, transparent 10px);
+        background-size: 20px 20px;
         position: relative;
         overflow: hidden;
     }
 
-    .qr-block {
+    .bsod-qr::before,
+    .bsod-qr::after {
+        content: "";
         position: absolute;
-        background: #000;
-    }
-
-    #bsod-info {
-        font-size: 14px;
-    }
-
-    #bsod-spinner {
-        position: absolute;
-        bottom: 40px;
-        right: 80px;
         width: 40px;
         height: 40px;
+        border: 6px solid #0078d7;
+        background: #fff;
+    }
+
+    .bsod-qr::before {
+        top: 8px;
+        left: 8px;
+    }
+
+    .bsod-qr::after {
+        bottom: 8px;
+        right: 8px;
+    }
+
+    .bsod-text-small {
+        font-size: 13px;
+        line-height: 1.6;
+        max-width: 420px;
+    }
+
+    /* Spinning dots */
+    .bsod-dots {
+        margin-top: 40px;
         display: flex;
-        align-items: center;
-        justify-content: center;
+        gap: 8px;
     }
 
     .dot {
-        width: 6px;
-        height: 6px;
+        width: 10px;
+        height: 10px;
         border-radius: 50%;
-        background: #fff;
-        margin: 0 2px;
-        opacity: 0.2;
-        animation: spinDots 1s linear infinite;
+        border: 2px solid #ffffff;
+        border-top-color: transparent;
+        animation: spin 1s linear infinite;
     }
 
-    .dot:nth-child(1) { animation-delay: 0s; }
     .dot:nth-child(2) { animation-delay: 0.1s; }
     .dot:nth-child(3) { animation-delay: 0.2s; }
     .dot:nth-child(4) { animation-delay: 0.3s; }
-    .dot:nth-child(5) { animation-delay: 0.4s; }
 
-    @keyframes spinDots {
-        0% { opacity: 0.2; transform: translateY(0); }
-        50% { opacity: 1; transform: translateY(-4px); }
-        100% { opacity: 0.2; transform: translateY(0); }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 
-    /* GLITCH */
-    .glitch {
-        animation: glitch 0.12s infinite;
-    }
-
-    @keyframes glitch {
-        0% { transform: translate(0,0); }
-        25% { transform: translate(-2px,1px); }
-        50% { transform: translate(2px,-1px); }
-        75% { transform: translate(-1px,-2px); }
-        100% { transform: translate(1px,2px); }
-    }
-
-    /* POPUPS */
-    .popup {
+    /* Code file text at bottom of BSOD */
+    .bsod-log {
         position: absolute;
-        background: #050505;
-        border: 1px solid #0f0;
-        color: #0f0;
-        font-size: 11px;
-        padding: 6px 8px;
-        z-index: 40;
-        animation: popupGlitch 0.3s infinite;
-        pointer-events: none;
+        left: 80px;
+        right: 80px;
+        bottom: 40px;
+        font-family: var(--mono-font);
+        font-size: 12px;
+        opacity: 0.9;
+        white-space: pre;
     }
 
-    @keyframes popupGlitch {
-        0% { transform: translate(0,0); }
-        50% { transform: translate(1px,-1px); }
-        100% { transform: translate(-1px,1px); }
-    }
-
-    /* FIX BUTTON */
-    #fix-btn {
-        position: absolute;
-        bottom: 8px;
-        right: 8px;
-        padding: 4px 8px;
-        font-size: 11px;
-        background: #001100;
-        color: #0f0;
-        border: 1px solid #0f0;
-        cursor: pointer;
-        display: none;
-        z-index: 50;
-        opacity: 0.6;
-    }
-
-    #fix-btn:hover {
-        opacity: 1;
-    }
-
-    /* FINAL OVERLAY */
-    #final-overlay {
-        position: absolute;
-        inset: 0;
-        background: #000;
-        color: #0f0;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        font-family: "Consolas", monospace;
-        font-size: 20px;
-        text-align: center;
-        padding: 20px;
-        box-sizing: border-box;
-        z-index: 60;
-    }
+    /* Small helper */
+    .hidden { display: none !important; }
 </style>
 </head>
 <body>
-<div id="screen">
 
-    <!-- INTRO -->
-    <div id="intro">
-        <div id="intro-overlay"></div>
-        <div id="intro-loading-bar">
-            LOADING VIPERX QUEST — BETA EDITION
-            <div id="intro-progress"></div>
+<div class="screen" id="introScreen">
+    <div class="intro-bg">
+        <div class="alley-grid"></div>
+        <div class="tron-bike">
+            <div class="tron-core"></div>
+            <div class="tron-wheel left"></div>
+            <div class="tron-wheel right"></div>
         </div>
-        <div id="error-modal">
-            <div id="error-box">
-                <div id="error-title">ERROR DETECTED</div>
-                <div id="error-body">
-                    A CRITICAL ERROR HAS BEEN DETECTED.<br>
-                    REMOVE ERROR TO CONTINUE.
-                </div>
-                <div id="error-footer">
-                    <button id="run-antivirus" class="btn">RUN ANTIVIRUS</button>
-                </div>
+        <div class="intro-content">
+            <div class="intro-title">LOADING&nbsp;&nbsp;VIPERX QUEST</div>
+            <div class="intro-sub">BETA&nbsp;&nbsp;EDITION</div>
+
+            <div class="intro-line">INITIALIZING PIXEL ENGINE...</div>
+            <div class="intro-line">SYNCHRONIZING SAVE SLOTS...</div>
+            <div class="intro-line">PREPARING FUTURISTIC ALLEYWAY...</div>
+        </div>
+        <div class="loading-dock">
+            <div class="loading-label">LOADING GAME DATA...</div>
+            <div class="loading-bar-outer">
+                <div class="loading-bar-inner" id="loadingBar"></div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- TERMINAL -->
-    <div id="terminal" class="hidden">
-        <div id="output"></div>
-    </div>
-
-    <!-- CANCEL -->
-    <button id="cancel-btn">CANCEL</button>
-
-    <!-- CHOICE -->
-    <div id="choice-dialog">
-        <div id="choice-box">
-            <div id="choice-text"></div>
-            <div id="choice-buttons">
-                <button id="choice-no" class="choice-btn">NO</button>
-                <button id="choice-yes" class="choice-btn">YES</button>
-            </div>
+<!-- Error modal -->
+<div class="error-modal" id="errorModal">
+    <div class="error-box">
+        <div class="error-header">
+            VIPERX QUEST LAUNCHER
+        </div>
+        <div class="error-body">
+            <p><strong>ERROR DETECTED!</strong></p>
+            <br />
+            <p>
+                An unexpected integrity fault was detected while loading
+                <strong>ViperX Quest BETA Edition</strong>.
+            </p>
+            <p>
+                To continue, you must remove the detected error and run a
+                temporary security scan.
+            </p>
+            <br />
+            <p><strong>REMOVE ERROR</strong> to proceed.</p>
+        </div>
+        <div class="error-footer">
+            <button class="btn btn-primary" id="runAntivirusBtn">RUN ANTIVIRUS</button>
         </div>
     </div>
+</div>
 
-    <!-- BSOD -->
-    <div id="bsod">
-        <div id="bsod-face">:(</div>
-        <div id="bsod-text">
-            Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.
+<!-- Hacking / web-breaking screen -->
+<div class="hack-screen" id="hackScreen">
+    <div class="hack-console">
+        <div class="hack-title">WE'VE HACKED YOUR DEVICE AND WE WILL BORROW YOUR INFORMATION</div>
+        <div class="hack-log" id="hackLog">
+C:\SYSTEM\VIPERX&gt; INITIALIZE_SECURE_CHANNEL
+C:\SYSTEM\VIPERX&gt; SCAN_GENERAL_DIRECTORIES /SYSTEM /LOGS /CACHE
+
         </div>
-        <div id="bsod-progress">0% complete</div>
-        <div id="bsod-bottom">
-            <div id="bsod-qr"></div>
-            <div id="bsod-info">
-                For more information about this issue and possible fixes, visit<br>
-                https://www.windows.com/stopcode<br><br>
-                If you call a support person, give them this info:<br>
-                Stop code: SIMULATED_OVERRRIDE_FAILURE
-            </div>
+    </div>
+</div>
+
+<!-- Accept screen with only CANCEL -->
+<div class="accept-screen" id="acceptScreen">
+    <div class="accept-box">
+        <div class="accept-header">
+            TEMPORARY ACCESS REQUEST
         </div>
-        <div id="bsod-spinner">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
+        <div class="accept-body">
+            To complete the repair, ViperX Quest requires temporary access to:
+            <br /><br />
+            • GENERAL SYSTEM LOGS<br />
+            • NON-PERSONAL CACHE DIRECTORIES<br />
+            • ANONYMOUS CONFIGURATION FILES<br /><br />
+            No personal user documents are accessed.
+            <br /><br />
+            Click <strong>CANCEL</strong> to continue.
+        </div>
+        <div class="accept-footer">
+            <button class="btn-cancel-only" id="cancelAccessBtn">CANCEL</button>
+        </div>
+    </div>
+</div>
+
+<!-- Blue screen -->
+<div class="bsod" id="bsodScreen">
+    <div class="bsod-face">:(</div>
+    <div class="bsod-main">
+        Your device ran into a problem and needs to restart. We're just collecting some error info,
+        and then we'll restart for you.
+    </div>
+    <div class="bsod-sub">
+        72% complete
+    </div>
+
+    <div class="bsod-row">
+        <div class="bsod-qr"></div>
+        <div class="bsod-text-small">
+            For more information about this issue and possible fixes, visit<br />
+            <span>https://www.fake-support.example/viperx</span>
+            <br /><br />
+            If you call a support person, give them this info:<br />
+            STOP CODE: VIPERX_FAKE_WEB_BREAK<br />
+            PARAM: 0x00000000C0DEFAKE
         </div>
     </div>
 
-    <!-- FIX -->
-    <button id="fix-btn">FIX</button>
+    <div class="bsod-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
 
-    <!-- FINAL -->
-    <div id="final-overlay">
-        YOUR ACCOUNT HAS BEEN SAVED.<br>
-        THOUGH WE STILL HAVE YOUR DATA. BYE!
+    <div class="bsod-log">
+C:\SYSTEM\VIPERX\LOGS\CRASH.LOG
+[0001] KERNEL_FAKE_EXCEPTION RAISED
+[0002] STACK TRACE: WEB_BREAK_SIMULATION &gt; UI_GLITCH_LAYER &gt; USER_CANCELLED_ACCESS
+[0003] DUMPING NON-PERSONAL SYSTEM STATE...
+[0004] WRITE COMPLETE.
     </div>
 </div>
 
 <script>
-    const intro = document.getElementById("intro");
-    const introProgress = document.getElementById("intro-progress");
-    const errorModal = document.getElementById("error-modal");
-    const runAntivirusBtn = document.getElementById("run-antivirus");
+    // Intro loading animation
+    const loadingBar = document.getElementById("loadingBar");
+    const introScreen = document.getElementById("introScreen");
+    const errorModal = document.getElementById("errorModal");
+    const hackScreen = document.getElementById("hackScreen");
+    const hackLog = document.getElementById("hackLog");
+    const acceptScreen = document.getElementById("acceptScreen");
+    const bsodScreen = document.getElementById("bsodScreen");
+    const runAntivirusBtn = document.getElementById("runAntivirusBtn");
+    const cancelAccessBtn = document.getElementById("cancelAccessBtn");
 
-    const terminal = document.getElementById("terminal");
-    const output = document.getElementById("output");
+    let loadProgress = 0;
+    const loadInterval = setInterval(() => {
+        loadProgress += Math.random() * 8 + 4;
+        if (loadProgress > 100) loadProgress = 100;
+        loadingBar.style.width = loadProgress + "%";
 
-    const cancelBtn = document.getElementById("cancel-btn");
+        if (loadProgress >= 100) {
+            clearInterval(loadInterval);
+            setTimeout(() => {
+                errorModal.style.display = "flex";
+            }, 600);
+        }
+    }, 180);
 
-    const choiceDialog = document.getElementById("choice-dialog");
-    const choiceText = document.getElementById("choice-text");
-    const choiceYes = document.getElementById("choice-yes");
-    const choiceNo = document.getElementById("choice-no");
+    // Fake hacking script lines
+    const hackLines = [
+        "C:\\SYSTEM\\VIPERX> ENUMERATE_GENERAL_FOLDERS /SYSTEM /LOGS /CACHE",
+        "C:\\SYSTEM\\VIPERX> OPEN FOLDER: C:\\SYSTEM\\LOGS\\SESSION",
+        "C:\\SYSTEM\\VIPERX> READ FILE: SESSION_0001.LOG",
+        "C:\\SYSTEM\\VIPERX> READ FILE: SESSION_0002.LOG",
+        "C:\\SYSTEM\\VIPERX> READ FILE: SESSION_0003.LOG",
+        "C:\\SYSTEM\\VIPERX> INDEX NON-PERSONAL CONFIG FILES",
+        "C:\\SYSTEM\\VIPERX> VERIFY: NO USER DOCUMENTS ACCESSED",
+        "C:\\SYSTEM\\VIPERX> START WEB_BREAK_SIMULATION",
+        "C:\\SYSTEM\\VIPERX> INJECT_FAKE_ERROR_POPUPS /RAPID",
+        "C:\\SYSTEM\\VIPERX> GLITCH_OVERLAY ENABLED",
+        "C:\\SYSTEM\\VIPERX> STREAM_FAKE_STACKTRACE",
+        "C:\\SYSTEM\\VIPERX> PREPARE TEMPORARY ACCESS PROMPT"
+    ];
 
-    const bsod = document.getElementById("bsod");
-    const bsodProgress = document.getElementById("bsod-progress");
-    const bsodQr = document.getElementById("bsod-qr");
+    let hackIndex = 0;
+    let hackInterval = null;
 
-    const fixBtn = document.getElementById("fix-btn");
-    const finalOverlay = document.getElementById("final-overlay");
+    function startHacking() {
+        introScreen.style.display = "none";
+        errorModal.style.display = "none";
+        hackScreen.style.display = "block";
 
-    let cancelUsed = false;
-    let declinePath = false;
-    let meltdownRunning = false;
-
-    function sleep(ms) {
-        return new Promise(res => setTimeout(res, ms));
-    }
-
-    function addLine(text = "") {
-        const div = document.createElement("div");
-        div.className = "line";
-        div.textContent = text;
-        output.appendChild(div);
-        output.scrollTop = output.scrollHeight;
-        return div;
-    }
-
-    async function typeLine(text = "", delay = 15) {
-        const div = document.createElement("div");
-        div.className = "line";
-        output.appendChild(div);
-        let i = 0;
-        function step() {
-            if (i <= text.length) {
-                div.textContent = text.slice(0, i);
-                output.scrollTop = output.scrollHeight;
-                i++;
-                setTimeout(step, delay);
+        hackInterval = setInterval(() => {
+            if (hackIndex < hackLines.length) {
+                hackLog.textContent += "\\n" + hackLines[hackIndex];
+                hackIndex++;
+                spawnPopup();
+            } else {
+                clearInterval(hackInterval);
+                setTimeout(() => {
+                    acceptScreen.style.display = "flex";
+                }, 1200);
             }
-        }
-        step();
-        await sleep(delay * text.length + 40);
+        }, 260);
+
+        // Add flashing cursor
+        const cursorSpan = document.createElement("span");
+        cursorSpan.className = "cursor";
+        hackLog.appendChild(cursorSpan);
     }
 
-    function showCursor() {
-        const div = document.createElement("div");
-        div.className = "line";
-        div.innerHTML = '<span id="cursor"></span>';
-        output.appendChild(div);
-        output.scrollTop = output.scrollHeight;
-    }
-
-    function clearCursor() {
-        const c = document.getElementById("cursor");
-        if (c && c.parentElement) c.parentElement.remove();
-    }
-
-    function showChoice(message, yesLabel, noLabel) {
-        return new Promise(res => {
-            choiceText.textContent = message;
-            choiceYes.textContent = yesLabel;
-            choiceNo.textContent = noLabel;
-            choiceDialog.style.display = "flex";
-
-            function cleanup() {
-                choiceDialog.style.display = "none";
-                choiceYes.onclick = null;
-                choiceNo.onclick = null;
-            }
-
-            choiceYes.onclick = () => { cleanup(); res("YES"); };
-            choiceNo.onclick = () => { cleanup(); res("NO"); };
-        });
-    }
-
-    async function enterFullscreen() {
-        const el = document.documentElement;
-        if (el.requestFullscreen) el.requestFullscreen();
-    }
-
-    document.addEventListener("keydown", e => {
-        if (e.key === "Escape") {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    }, true);
-
-    async function runIntro() {
-        let p = 0;
-        for (let i = 0; i < 10; i++) {
-            p += Math.random() * 10;
-            if (p > 100) p = 100;
-            introProgress.style.width = p + "%";
-            await sleep(300);
-        }
-        await sleep(400);
-        errorModal.style.display = "flex";
-    }
-
-    runIntro();
-
-    runAntivirusBtn.addEventListener("click", async () => {
-        await enterFullscreen();
-        intro.classList.add("hidden");
-        terminal.classList.remove("hidden");
-        startTerminalIntro();
-    });
-
-    async function startTerminalIntro() {
-        await typeLine("INITIALIZING VIPERX ANTIVIRUS...");
-        await sleep(250);
-        await typeLine("SCANNING SYSTEM MEMORY...");
-        await sleep(250);
-        await typeLine("ANALYZING KERNEL HOOKS...");
-        await sleep(250);
-        await typeLine("CHECKING REMOTE CONNECTIONS...");
-        await sleep(400);
-        await addLine();
-        await sleep(300);
-
-        await typeLine("WE'VE HACKED YOUR DEVICE AND WE WILL BORROW YOUR INFORMATION.", 25);
-        await sleep(600);
-
-        await typeLine("> OPEN /SIM/FS/ROOT/LOGS/CORE.LOG");
-        await typeLine("> ENUMERATE ACTIVE SESSION TOKENS");
-        await typeLine("> ATTACH REMOTE EXTRACTION HANDLER");
-        await typeLine("> HANDSHAKE COMPLETE");
-        await addLine();
-        await sleep(400);
-
-        await showMainNotice();
-    }
-
-    async function showMainNotice() {
-        await typeLine("SYSTEM NOTICE: A REMOTE PROCESS IS REQUESTING DATA TRANSFER.");
-        await typeLine("DECLINING THIS REQUEST WILL RESULT IN LOSS OF ALL ACTIVE SESSION DATA.");
-        await addLine();
-        await typeLine("SELECT AN ACTION:");
-        await typeLine("  [ SEND DATA ]");
-        await typeLine("  [ DECLINE (RESULTS IN LOSS) ]");
-        await sleep(600);
-
-        const choice = await showChoice(
-            "SELECT AN ACTION:\n\n[ SEND DATA ]\n[ DECLINE (RESULTS IN LOSS) ]",
-            "SEND DATA",
-            "DECLINE"
-        );
-
-        if (choice === "YES") {
-            declinePath = false;
-            await addLine();
-            await typeLine("> USER SELECTION: SEND DATA");
-            await sleep(400);
-            startExtractionFlow();
-        } else {
-            declinePath = true;
-            await addLine();
-            await typeLine("> USER SELECTION: DECLINE (RESULTS IN LOSS)");
-            await sleep(400);
-            startDeclineFlow();
-        }
-    }
-
-    async function startExtractionFlow() {
-        cancelUsed = false;
-        cancelBtn.style.display = "block";
-
-        await addLine();
-        await typeLine("STARTING REMOTE EXTRACTION PIPELINE...");
-        await typeLine("MAPPING VIRTUAL MEMORY TABLES...");
-        await typeLine("OPENING CHANNEL /SIM/NET/CHANNEL/PIPE_04");
-        await typeLine("PIPE_04 STATUS: STABLE");
-        await addLine();
-        await sleep(400);
-
-        runCalmLogs();
-
-        await sleep(5000);
-        if (!cancelUsed) {
-            await typeLine("WARNING: INTEGRITY CHECK FAILED.");
-            await typeLine("ALERT: CHANNEL LATENCY SPIKE DETECTED.");
-            await sleep(800);
-        }
-    }
-
-    async function startDeclineFlow() {
-        cancelUsed = false;
-        cancelBtn.style.display = "block";
-
-        await addLine();
-        await typeLine("FINE. WE'LL DELETE YOUR DATA WITHOUT TAKING IT THEN.....", 30);
-        await sleep(1200);
-        await typeLine("JUST KIDDING.", 40);
-        await sleep(700);
-        await typeLine("YOU REALLY THOUGHT THAT WOULD STOP ANYTHING?", 35);
-        await sleep(900);
-        await typeLine("FORCING REMOTE EXTRACTION ANYWAY.");
-        await addLine();
-        await sleep(600);
-
-        runAggressiveLogs();
-
-        await sleep(4000);
-        if (!cancelUsed && !meltdownRunning) {
-            await triggerBsodThenMeltdown();
-        }
-    }
-
-    function runCalmLogs() {
-        (async () => {
-            const lines = [
-                "/SIM/FS/ROOT/LOGS/CORE/CORE_0001.LOG",
-                "/SIM/FS/ROOT/LOGS/CORE/CORE_0002.LOG",
-                "/SIM/FS/ROOT/LOGS/NET/NET_0001.LOG",
-                "/SIM/FS/ROOT/CONFIG/SESSION.CFG",
-                "INIT_REMOTE_SESSION();",
-                "LOAD_SESSION_TABLE();",
-                "MAP_VIRTUAL_MEMORY();",
-                "OPEN_CHANNEL(PIPE_04);",
-                "[CORE] MEMORY TABLE SYNC OK",
-                "[NET] CHANNEL PIPE_04 OK"
-            ];
-            for (let i = 0; i < 40 && !cancelUsed && !meltdownRunning; i++) {
-                const l = lines[Math.floor(Math.random() * lines.length)];
-                addLine(l);
-                await sleep(200 + Math.random() * 200);
-            }
-        })();
-    }
-
-    function runAggressiveLogs() {
-        (async () => {
-            const lines = [
-                "/SIM/FS/ROOT/LOGS/CORE/CORE_0001.LOG",
-                "/SIM/FS/ROOT/LOGS/CORE/CORE_0002.LOG",
-                "/SIM/FS/ROOT/LOGS/CORE/CORE_0003.LOG",
-                "/SIM/FS/ROOT/LOGS/NET/NET_0001.LOG",
-                "/SIM/FS/ROOT/LOGS/NET/NET_0002.LOG",
-                "/SIM/FS/ROOT/USERS/ACTIVE/SESSION_01.DAT",
-                "/SIM/FS/ROOT/USERS/ACTIVE/SESSION_02.DAT",
-                "INIT_REMOTE_SESSION();",
-                "LOAD_SESSION_TABLE();",
-                "MAP_VIRTUAL_MEMORY();",
-                "OPEN_CHANNEL(PIPE_04);",
-                "ESCALATE_PRIORITY(THREAD_42);",
-                "OVERRIDE_HANDLER::INJECT();",
-                "ERR_PIPE_COLLISION(0x00A1);",
-                "ERR_STACK_OVERFLOW(0x0BADF00D);",
-                "[CORE] PIPE_04 COLLISION DETECTED",
-                "[CORE] INDEX REBUILD FAILED",
-                "[CORE] FALLBACK MODE ENABLED"
-            ];
-            while (!cancelUsed && !meltdownRunning) {
-                const l = lines[Math.floor(Math.random() * lines.length)];
-                addLine(l);
-                await sleep(120 + Math.random() * 120);
-            }
-        })();
-    }
-
-    cancelBtn.addEventListener("click", async () => {
-        if (cancelUsed || meltdownRunning) return;
-        cancelUsed = true;
-        cancelBtn.style.display = "none";
-
-        const answer = await showChoice(
-            "CANCELLING WILL RESULT IN PERMANENT DATA LOSS.\nDO YOU WISH TO CONTINUE?",
-            "YES",
-            "NO"
-        );
-
-        if (answer === "YES") {
-            await handleCancelYes();
-        } else {
-            await handleCancelNo();
-        }
-    });
-
-    async function handleCancelYes() {
-        await addLine();
-        await typeLine("CANCELLATION ACCEPTED.");
-        await sleep(500);
-        await typeLine("SYSTEM OVERRIDE HAS BEGUN.");
-        await sleep(800);
-        await startMeltdown();
-    }
-
-    async function handleCancelNo() {
-        if (declinePath) {
-            await addLine();
-            await typeLine("USER CANCELLATION IGNORED.");
-            await typeLine("REMOTE PRIORITY OVERRIDDEN.");
-            await sleep(600);
-            runAggressiveLogs();
-            await sleep(3000);
-            if (!meltdownRunning) await triggerBsodThenMeltdown();
-        } else {
-            await addLine();
-            await typeLine("CANCELLATION DENIED.");
-            await typeLine("RESUMING EXTRACTION.");
-            await sleep(800);
-            runAggressiveLogs();
-            await sleep(4000);
-            if (!meltdownRunning) await triggerBsodThenMeltdown();
-        }
-    }
-
-    function buildQr() {
-        const blocks = [
-            {x:4,y:4,w:32,h:32},
-            {x:84,y:4,w:32,h:32},
-            {x:4,y:84,w:32,h:32},
-            {x:50,y:50,w:12,h:12},
-            {x:68,y:68,w:10,h:10},
-            {x:40,y:20,w:8,h:8},
-            {x:20,y:60,w:6,h:6},
-            {x:90,y:90,w:8,h:8}
-        ];
-        blocks.forEach(b => {
-            const d = document.createElement("div");
-            d.className = "qr-block";
-            d.style.left = b.x + "px";
-            d.style.top = b.y + "px";
-            d.style.width = b.w + "px";
-            d.style.height = b.h + "px";
-            bsodQr.appendChild(d);
-        });
-    }
-    buildQr();
-
-    async function triggerBsodThenMeltdown() {
-        meltdownRunning = true;
-        terminal.classList.add("hidden");
-        bsod.style.display = "flex";
-
-        let progress = 0;
-        while (progress < 99.999) {
-            progress += Math.random() * 8;
-            if (progress > 99.999) progress = 99.999;
-            bsodProgress.textContent = progress.toFixed(3) + "% complete";
-            await sleep(250 + Math.random() * 250);
-        }
-
-        await sleep(800);
-
-        const err = document.createElement("div");
-        err.style.position = "absolute";
-        err.style.inset = "0";
-        err.style.background = "#ff000022";
-        err.style.display = "flex";
-        err.style.alignItems = "center";
-        err.style.justifyContent = "center";
-        err.style.fontSize = "28px";
-        err.style.fontWeight = "bold";
-        err.style.color = "#ff0000";
-        err.style.textShadow = "0 0 8px #000";
-        err.textContent = "!!! FATAL ERROR: RECOVERY FAILED !!!";
-        document.body.appendChild(err);
-
-        bsod.classList.add("glitch");
-        await sleep(1200);
-
-        bsod.style.display = "none";
-        bsod.classList.remove("glitch");
-        err.remove();
-        terminal.classList.remove("hidden");
-
-        await addLine();
-        await typeLine("RECOVERY FAILED.");
-        await typeLine("RESUMING OVERRIDE.");
-        await sleep(600);
-
-        await startMeltdown();
-    }
-
+    // Glitchy popups
     function spawnPopup() {
-        const p = document.createElement("div");
-        p.className = "popup";
-        const msgs = [
-            "ACCESS GRANTED",
-            "OVERRIDE ENABLED",
-            "REMOTE CONTROL ACTIVE",
-            "CHANNEL OVERRIDE",
-            "THREAD PRIORITY ESCALATED",
-            "CORE COLLISION DETECTED"
+        const popup = document.createElement("div");
+        popup.className = "popup";
+
+        const titles = [
+            "SIMULATED ERROR",
+            "CONNECTION GLITCH",
+            "WEB BREAK NOTICE",
+            "UI RENDER WARNING",
+            "STACKTRACE OVERFLOW"
         ];
-        p.textContent = msgs[Math.floor(Math.random() * msgs.length)];
-        p.style.left = Math.random() * (window.innerWidth - 160) + "px";
-        p.style.top = Math.random() * (window.innerHeight - 80) + "px";
-        document.body.appendChild(p);
-        setTimeout(() => p.remove(), 2500 + Math.random() * 1500);
+        const bodies = [
+            "A non-critical visual fault has been simulated.",
+            "Temporary disruption in fake network layer detected.",
+            "This is a prank. No real data is being accessed.",
+            "Rendering glitch overlay for dramatic effect.",
+            "Fake stacktrace streaming to console output."
+        ];
+
+        const t = titles[Math.floor(Math.random() * titles.length)];
+        const b = bodies[Math.floor(Math.random() * bodies.length)];
+
+        popup.innerHTML = `
+            <div class="popup-title">${t}</div>
+            <div class="popup-body">${b}</div>
+        `;
+
+        const x = Math.random() * (window.innerWidth - 280);
+        const y = Math.random() * (window.innerHeight - 220);
+        popup.style.left = x + "px";
+        popup.style.top = y + "px";
+
+        hackScreen.appendChild(popup);
+
+        setTimeout(() => {
+            popup.style.opacity = "0";
+            setTimeout(() => popup.remove(), 800);
+        }, 2000);
     }
 
-    async function startMeltdown() {
-        meltdownRunning = true;
-        document.body.classList.add("glitch");
+    runAntivirusBtn.addEventListener("click", () => {
+        startHacking();
+    });
 
-        await sleep(2000);
-
-        (async () => {
-            const lines = [
-                "/SIM/FS/ROOT/LOGS/CORE/CORE_0001.LOG",
-                "/SIM/FS/ROOT/LOGS/CORE/CORE_0002.LOG",
-                "/SIM/FS/ROOT/LOGS/CORE/CORE_0003.LOG",
-                "/SIM/FS/ROOT/LOGS/NET/NET_0001.LOG",
-                "/SIM/FS/ROOT/LOGS/NET/NET_0002.LOG",
-                "/SIM/FS/ROOT/USERS/ACTIVE/SESSION_01.DAT",
-                "/SIM/FS/ROOT/USERS/ACTIVE/SESSION_02.DAT",
-                "/SIM/FS/ROOT/USERS/ACTIVE/SESSION_03.DAT",
-                "INIT_REMOTE_SESSION();",
-                "LOAD_SESSION_TABLE();",
-                "MAP_VIRTUAL_MEMORY();",
-                "OPEN_CHANNEL(PIPE_04);",
-                "ESCALATE_PRIORITY(THREAD_42);",
-                "OVERRIDE_HANDLER::INJECT();",
-                "OVERRIDE_HANDLER::ESCALATE();",
-                "ERR_PIPE_COLLISION(0x00A1);",
-                "ERR_STACK_OVERFLOW(0x0BADF00D);",
-                "ERR_CHANNEL_TIMEOUT(0x0007);",
-                "[CORE] PIPE_04 COLLISION DETECTED",
-                "[CORE] INDEX REBUILD FAILED",
-                "[CORE] FALLBACK MODE ENABLED",
-                "STACKTRACE:",
-                "  AT PROC.HANDLER.OVERRIDE()",
-                "  AT PROC.HANDLER.ESCALATE()",
-                "  AT CORE.MEM.TABLE_SYNC()",
-                ">>> OVERRIDE LOOPBACK FAILURE",
-                ">>> MEMORY MAP DESYNC",
-                ">>> STACK COLLAPSE DETECTED",
-                ">>> THREAD_42 ESCALATED",
-                ">>> PIPE_04 COLLISION"
-            ];
-            for (let i = 0; i < 120; i++) {
-                const l = lines[Math.floor(Math.random() * lines.length)];
-                addLine(l);
-                if (Math.random() < 0.25) spawnPopup();
-                await sleep(40 + Math.random() * 40);
-            }
-        })();
-
-        await sleep(2500);
-        fixBtn.style.display = "block";
-    }
-
-    fixBtn.addEventListener("click", async () => {
-        fixBtn.style.display = "none";
-        document.body.classList.remove("glitch");
-        await sleep(600);
-        output.textContent = "";
-        await sleep(600);
-        finalOverlay.style.display = "flex";
-        await sleep(2500);
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        }
+    cancelAccessBtn.addEventListener("click", () => {
+        acceptScreen.style.display = "none";
+        hackScreen.style.display = "none";
+        bsodScreen.style.display = "block";
     });
 </script>
+
 </body>
 </html>
