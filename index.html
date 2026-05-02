@@ -1,745 +1,547 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="utf-8" />
 <title>ViperX Quest BETA</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
-    :root {
-        --bg-dark: #05060a;
-        --neon-green: #4dff88;
-        --neon-green-soft: #2adf6a;
-        --error-red: #ff3b3b;
-        --soft-white: #f5f5f5;
-        --blue-screen: #0078d7;
-        --popup-bg: #111319;
-        --pixel-font: "Press Start 2P", system-ui, sans-serif;
-        --mono-font: "Cascadia Code", "Consolas", monospace;
-    }
+  :root{
+    --bg:#000;
+    --neon:#4dff88;
+    --neon-soft:#2adf6a;
+    --bsod:#0078d7;
+    --mono: "Cascadia Code", "Consolas", monospace;
+  }
 
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
+  /* Page reset */
+  html,body{height:100%;margin:0;padding:0;background:var(--bg);overflow:hidden;font-family:var(--mono);color:var(--neon);}
 
-    html, body {
-        width: 100%;
-        height: 100%;
-        overflow: hidden; /* no scrolling */
-        background: #000;
-        color: var(--soft-white);
-        font-family: var(--mono-font);
-    }
+  /* Container */
+  #screen{position:fixed;inset:0;background:#000;overflow:hidden;}
 
-    body {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+  /* INTRO (pixel art feel) */
+  #intro{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;
+    background:
+      linear-gradient(#050510,#050510),
+      url("pixel_cyberpunk_alley_tron_bike.png") center/cover no-repeat;
+    image-rendering: pixelated;
+  }
 
-    /* Shared containers */
-    .screen {
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-        background: #000;
-        overflow: hidden;
-    }
+  #intro-overlay{position:absolute;inset:0;background:radial-gradient(circle at 20% 20%, rgba(77,255,136,0.18), transparent 40%);pointer-events:none;}
 
-    /* Futuristic alleyway + Tron bike (stylized) */
-    .intro-bg {
-        position: absolute;
-        inset: 0;
-        background:
-            radial-gradient(circle at 20% 80%, rgba(77,255,136,0.35), transparent 55%),
-            radial-gradient(circle at 80% 20%, rgba(77,255,136,0.25), transparent 55%),
-            linear-gradient(to top, #020308 0%, #05060a 40%, #0b0f1a 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+  /* Loading dock (thicker) */
+  .loading-dock{position:fixed;left:0;right:0;bottom:0;height:92px;background:rgba(5,5,5,0.98);border-top:4px solid rgba(77,255,136,0.45);display:flex;flex-direction:column;justify-content:center;padding:12px 28px;z-index:8}
+  .loading-label{font-family:"Press Start 2P",monospace;font-size:15px;letter-spacing:2px;color:var(--neon);margin-bottom:8px}
+  .loading-bar-outer{height:28px;border-radius:999px;border:3px solid var(--neon);overflow:hidden;background:#00110022}
+  .loading-bar-inner{height:100%;width:0%;background:linear-gradient(90deg,#1aff66,#00ffaa);box-shadow:0 0 18px rgba(77,255,136,0.45);transition:width 0.18s linear}
 
-    .alley-grid {
-        position: absolute;
-        inset: 0;
-        background-image:
-            linear-gradient(to right, rgba(0,255,128,0.15) 1px, transparent 1px),
-            linear-gradient(to top, rgba(0,255,128,0.15) 1px, transparent 1px);
-        background-size: 40px 40px;
-        opacity: 0.35;
-        transform: perspective(600px) rotateX(70deg) translateY(20vh);
-        transform-origin: center bottom;
-    }
+  /* Error modal (opaque, large) */
+  #error-modal{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:20;background:rgba(0,0,0,0.6)}
+  #error-box{width:620px;background:#f6f6f6;color:#111;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.7);padding:26px;font-family:system-ui}
+  #error-title{font-size:26px;font-weight:700;margin-bottom:12px}
+  #error-body{font-size:16px;line-height:2}
+  #error-footer{text-align:right;margin-top:14px}
+  .btn{padding:10px 18px;border-radius:6px;border:1px solid #0078d4;background:linear-gradient(#0a84ff,#0060d4);color:#fff;font-weight:600;cursor:pointer}
 
-    .tron-bike {
-        position: absolute;
-        bottom: 18%;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 260px;
-        height: 120px;
-        border-radius: 60px;
-        border: 4px solid var(--neon-green);
-        box-shadow: 0 0 25px var(--neon-green-soft);
-    }
+  /* Terminal (command prompt vibe) */
+  #terminal{position:absolute;inset:0;background:radial-gradient(circle at top,#021a08 0,#000 60%);color:var(--neon);padding:28px;box-sizing:border-box;display:none;overflow:hidden}
+  #output{width:100%;height:100%;overflow:hidden;line-height:2;font-size:20px;white-space:pre-wrap;word-break:break-word}
+  .line{line-height:2;margin-bottom:6px}
+  /* flashing square cursor */
+  .cursor-square{display:inline-block;width:14px;height:18px;background:var(--neon);vertical-align:middle;margin-left:6px;animation:blinkSquare 0.7s steps(1) infinite}
+  @keyframes blinkSquare{0%,49%{opacity:1}50%,100%{opacity:0}}
 
-    .tron-wheel {
-        position: absolute;
-        bottom: -40px;
-        width: 90px;
-        height: 90px;
-        border-radius: 50%;
-        border: 6px solid var(--neon-green);
-        box-shadow: 0 0 25px var(--neon-green-soft);
-    }
+  /* Choice dialog (send/decline) */
+  #choice-dialog{position:absolute;inset:0;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;z-index:30}
+  #choice-box{background:#050505;border:2px solid var(--neon);padding:22px;color:var(--neon);width:640px;border-radius:8px;box-shadow:0 0 30px rgba(0,255,136,0.12);font-size:18px;line-height:2}
+  #choice-buttons{display:flex;justify-content:flex-end;gap:12px;margin-top:8px}
+  .choice-btn{background:#001100;border:1px solid var(--neon);color:var(--neon);padding:10px 18px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:16px}
 
-    .tron-wheel.left {
-        left: 10px;
-    }
+  /* Cancel button (only shown in send flow) */
+  #cancel-btn{position:fixed;top:18px;right:18px;padding:10px 16px;background:#330000;color:#ff8b8b;border:1px solid #ff6666;border-radius:6px;font-family:var(--mono);font-size:16px;cursor:pointer;display:none;z-index:40;box-shadow:0 0 18px rgba(255,0,0,0.12)}
 
-    .tron-wheel.right {
-        right: 10px;
-    }
+  /* Popups (glitchy) */
+  .popup{position:absolute;width:300px;background:#0f0f12;color:#fff;border-radius:8px;padding:10px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 12px 30px rgba(0,0,0,0.7);pointer-events:none;z-index:45;opacity:0;transform:scale(0.96);animation:popupIn 0.28s forwards}
+  .popup .h{font-weight:700;margin-bottom:6px}
+  .popup .b{font-size:13px;line-height:1.6}
+  @keyframes popupIn{0%{opacity:0;transform:translate(0,0) scale(0.96)}40%{opacity:1;transform:translate(-6px,4px) scale(1.02)}100%{opacity:1;transform:translate(0,0) scale(1)}}
 
-    .tron-core {
-        position: absolute;
-        inset: 18px 40px;
-        border-radius: 40px;
-        border: 3px solid rgba(77,255,136,0.7);
-        box-shadow: inset 0 0 18px rgba(77,255,136,0.7);
-    }
+  /* BSOD (only shown on decline path) */
+  #bsod{position:absolute;inset:0;background:var(--bsod);color:#fff;font-family:Segoe UI,system-ui;display:none;flex-direction:column;padding:80px 100px;box-sizing:border-box;z-index:50}
+  #bsod-face{font-size:72px;margin-bottom:18px}
+  #bsod-text{font-size:22px;line-height:1.9;margin-bottom:18px;max-width:760px}
+  #bsod-progress{font-size:18px;margin-bottom:18px}
+  #bsod-row{display:flex;gap:36px;align-items:flex-start}
+  #bsod-qr{width:140px;height:140px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:6px}
+  #bsod-qr img{width:100%;height:100%;object-fit:cover}
+  #bsod-info{font-size:15px;line-height:1.9}
+  /* spinning dots (loading) */
+  .bsod-dots{display:flex;gap:10px;margin-top:22px}
+  .dot{width:12px;height:12px;border-radius:50%;border:2px solid #fff;border-top-color:transparent;animation:spin 1s linear infinite}
+  .dot:nth-child(2){animation-delay:0.08s}.dot:nth-child(3){animation-delay:0.16s}.dot:nth-child(4){animation-delay:0.24s}
+  @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
 
-    /* Pixel text intro */
-    .intro-content {
-        position: relative;
-        text-align: center;
-        z-index: 2;
-        color: var(--soft-white);
-        text-shadow: 0 0 6px #000;
-    }
+  /* BSOD bottom log (C style file text) */
+  #bsod-log{position:absolute;left:80px;right:80px;bottom:40px;font-family:var(--mono);font-size:13px;color:#eaf6ff;white-space:pre;line-height:1.9;opacity:0.95}
 
-    .intro-title {
-        font-family: var(--pixel-font);
-        font-size: 32px;
-        letter-spacing: 4px;
-        margin-bottom: 24px;
-    }
+  /* Fix button after meltdown */
+  #fix-btn{position:fixed;right:18px;bottom:18px;padding:10px 14px;background:#001100;color:var(--neon);border:1px solid var(--neon);border-radius:6px;cursor:pointer;display:none;z-index:60}
 
-    .intro-sub {
-        font-family: var(--pixel-font);
-        font-size: 18px;
-        margin-bottom: 40px;
-    }
+  /* Final overlay */
+  #final-overlay{position:absolute;inset:0;background:#000;color:var(--neon);display:none;align-items:center;justify-content:center;font-size:22px;font-family:var(--mono);z-index:70;line-height:2}
 
-    .intro-line {
-        font-family: var(--pixel-font);
-        font-size: 14px;
-        margin-bottom: 18px;
-    }
-
-    /* Thick loading bar at bottom */
-    .loading-dock {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 80px;
-        background: rgba(5, 6, 10, 0.96);
-        border-top: 2px solid rgba(77,255,136,0.4);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 10px 40px;
-        gap: 10px;
-    }
-
-    .loading-label {
-        font-family: var(--pixel-font);
-        font-size: 14px;
-        letter-spacing: 2px;
-    }
-
-    .loading-bar-outer {
-        width: 100%;
-        height: 22px;
-        border-radius: 999px;
-        border: 2px solid var(--neon-green);
-        padding: 2px;
-        overflow: hidden;
-    }
-
-    .loading-bar-inner {
-        width: 0%;
-        height: 100%;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #1aff66, #00ffaa, #1aff66);
-        box-shadow: 0 0 12px var(--neon-green-soft);
-        transition: width 0.2s linear;
-    }
-
-    /* Error modal */
-    .error-modal {
-        position: absolute;
-        inset: 0;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0,0,0,0.55);
-        z-index: 10;
-    }
-
-    .error-box {
-        width: 520px;
-        background: #f2f2f2;
-        color: #111;
-        border-radius: 10px;
-        box-shadow: 0 18px 40px rgba(0,0,0,0.6);
-        border: 1px solid #c0c0c0;
-        overflow: hidden;
-        font-family: system-ui, sans-serif;
-    }
-
-    .error-header {
-        background: linear-gradient(to right, #e6e6e6, #fdfdfd);
-        padding: 14px 18px;
-        font-weight: 600;
-        font-size: 16px;
-        border-bottom: 1px solid #d0d0d0;
-    }
-
-    .error-body {
-        padding: 20px 22px 10px;
-        font-size: 15px;
-        line-height: 1.6;
-    }
-
-    .error-body strong {
-        color: #b00000;
-    }
-
-    .error-footer {
-        padding: 14px 18px 18px;
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-
-    .btn {
-        min-width: 130px;
-        padding: 8px 16px;
-        border-radius: 4px;
-        border: 1px solid #b0b0b0;
-        background: #f8f8f8;
-        font-size: 14px;
-        cursor: pointer;
-    }
-
-    .btn-primary {
-        background: #0078d7;
-        border-color: #0063b1;
-        color: #fff;
-    }
-
-    .btn-primary:hover {
-        background: #0063b1;
-    }
-
-    /* Hacking / web-breaking screen */
-    .hack-screen {
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at top, #0b1b0f, #020403 70%);
-        color: #b6ffce;
-        display: none;
-        font-family: var(--mono-font);
-    }
-
-    .hack-console {
-        position: absolute;
-        inset: 40px 40px 120px 40px;
-        background: rgba(0,0,0,0.75);
-        border-radius: 10px;
-        border: 1px solid rgba(77,255,136,0.4);
-        padding: 18px 20px;
-        overflow: hidden;
-    }
-
-    .hack-title {
-        font-size: 16px;
-        margin-bottom: 16px;
-        color: var(--neon-green);
-    }
-
-    .hack-log {
-        font-size: 14px;
-        line-height: 1.8;
-        white-space: pre-wrap;
-        overflow: hidden;
-        height: 100%;
-    }
-
-    .cursor {
-        display: inline-block;
-        width: 10px;
-        background: var(--neon-green);
-        margin-left: 4px;
-        animation: blink 0.8s steps(1) infinite;
-    }
-
-    @keyframes blink {
-        0%, 50% { opacity: 1; }
-        50.01%, 100% { opacity: 0; }
-    }
-
-    /* Glitch popups */
-    .popup {
-        position: absolute;
-        width: 260px;
-        background: var(--popup-bg);
-        color: #f8f8f8;
-        border-radius: 8px;
-        border: 1px solid rgba(255,255,255,0.15);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.7);
-        padding: 10px 12px 12px;
-        font-size: 12px;
-        pointer-events: none;
-        opacity: 0;
-        transform: scale(0.9);
-        animation: popup-glitch 1.2s ease-out forwards;
-    }
-
-    .popup-title {
-        font-weight: 600;
-        margin-bottom: 6px;
-        font-size: 12px;
-    }
-
-    .popup-body {
-        font-size: 11px;
-        line-height: 1.5;
-    }
-
-    @keyframes popup-glitch {
-        0% { opacity: 0; transform: translate(0,0) scale(0.9); }
-        20% { opacity: 1; transform: translate(-4px,2px) scale(1.02); }
-        40% { transform: translate(3px,-3px) scale(1); }
-        60% { transform: translate(-2px,1px) scale(1.01); }
-        100% { opacity: 1; transform: translate(0,0) scale(1); }
-    }
-
-    /* Accept screen with only CANCEL */
-    .accept-screen {
-        position: absolute;
-        inset: 0;
-        background: rgba(0,0,0,0.8);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 20;
-    }
-
-    .accept-box {
-        width: 480px;
-        background: #fdfdfd;
-        color: #111;
-        border-radius: 10px;
-        border: 1px solid #c0c0c0;
-        box-shadow: 0 18px 40px rgba(0,0,0,0.7);
-        overflow: hidden;
-        font-family: system-ui, sans-serif;
-    }
-
-    .accept-header {
-        padding: 14px 18px;
-        font-weight: 600;
-        font-size: 16px;
-        border-bottom: 1px solid #d0d0d0;
-        background: linear-gradient(to right, #f0f0f0, #ffffff);
-    }
-
-    .accept-body {
-        padding: 20px 22px 10px;
-        font-size: 15px;
-        line-height: 1.7;
-    }
-
-    .accept-footer {
-        padding: 14px 18px 18px;
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    .btn-cancel-only {
-        min-width: 130px;
-        padding: 8px 16px;
-        border-radius: 4px;
-        border: 1px solid #b0b0b0;
-        background: #f8f8f8;
-        font-size: 14px;
-        cursor: pointer;
-    }
-
-    .btn-cancel-only:hover {
-        background: #e8e8e8;
-    }
-
-    /* Blue screen of death */
-    .bsod {
-        position: absolute;
-        inset: 0;
-        background: var(--blue-screen);
-        color: #ffffff;
-        font-family: "Segoe UI", system-ui, sans-serif;
-        display: none;
-        padding: 80px 120px;
-    }
-
-    .bsod-face {
-        font-size: 64px;
-        margin-bottom: 30px;
-    }
-
-    .bsod-main {
-        font-size: 22px;
-        margin-bottom: 24px;
-    }
-
-    .bsod-sub {
-        font-size: 16px;
-        margin-bottom: 40px;
-        max-width: 640px;
-    }
-
-    .bsod-row {
-        display: flex;
-        gap: 40px;
-        align-items: flex-start;
-    }
-
-    .bsod-qr {
-        width: 140px;
-        height: 140px;
-        background:
-            linear-gradient(90deg, #fff 10px, transparent 10px),
-            linear-gradient(180deg, #fff 10px, transparent 10px);
-        background-size: 20px 20px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .bsod-qr::before,
-    .bsod-qr::after {
-        content: "";
-        position: absolute;
-        width: 40px;
-        height: 40px;
-        border: 6px solid #0078d7;
-        background: #fff;
-    }
-
-    .bsod-qr::before {
-        top: 8px;
-        left: 8px;
-    }
-
-    .bsod-qr::after {
-        bottom: 8px;
-        right: 8px;
-    }
-
-    .bsod-text-small {
-        font-size: 13px;
-        line-height: 1.6;
-        max-width: 420px;
-    }
-
-    /* Spinning dots */
-    .bsod-dots {
-        margin-top: 40px;
-        display: flex;
-        gap: 8px;
-    }
-
-    .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        border: 2px solid #ffffff;
-        border-top-color: transparent;
-        animation: spin 1s linear infinite;
-    }
-
-    .dot:nth-child(2) { animation-delay: 0.1s; }
-    .dot:nth-child(3) { animation-delay: 0.2s; }
-    .dot:nth-child(4) { animation-delay: 0.3s; }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    /* Code file text at bottom of BSOD */
-    .bsod-log {
-        position: absolute;
-        left: 80px;
-        right: 80px;
-        bottom: 40px;
-        font-family: var(--mono-font);
-        font-size: 12px;
-        opacity: 0.9;
-        white-space: pre;
-    }
-
-    /* Small helper */
-    .hidden { display: none !important; }
+  /* small helpers */
+  .hidden{display:none!important}
 </style>
 </head>
 <body>
+<div id="screen">
 
-<div class="screen" id="introScreen">
-    <div class="intro-bg">
-        <div class="alley-grid"></div>
-        <div class="tron-bike">
-            <div class="tron-core"></div>
-            <div class="tron-wheel left"></div>
-            <div class="tron-wheel right"></div>
-        </div>
-        <div class="intro-content">
-            <div class="intro-title">LOADING&nbsp;&nbsp;VIPERX QUEST</div>
-            <div class="intro-sub">BETA&nbsp;&nbsp;EDITION</div>
+  <!-- Intro -->
+  <div id="intro">
+    <div id="intro-overlay"></div>
 
-            <div class="intro-line">INITIALIZING PIXEL ENGINE...</div>
-            <div class="intro-line">SYNCHRONIZING SAVE SLOTS...</div>
-            <div class="intro-line">PREPARING FUTURISTIC ALLEYWAY...</div>
-        </div>
-        <div class="loading-dock">
-            <div class="loading-label">LOADING GAME DATA...</div>
-            <div class="loading-bar-outer">
-                <div class="loading-bar-inner" id="loadingBar"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Error modal -->
-<div class="error-modal" id="errorModal">
-    <div class="error-box">
-        <div class="error-header">
-            VIPERX QUEST LAUNCHER
-        </div>
-        <div class="error-body">
-            <p><strong>ERROR DETECTED!</strong></p>
-            <br />
-            <p>
-                An unexpected integrity fault was detected while loading
-                <strong>ViperX Quest BETA Edition</strong>.
-            </p>
-            <p>
-                To continue, you must remove the detected error and run a
-                temporary security scan.
-            </p>
-            <br />
-            <p><strong>REMOVE ERROR</strong> to proceed.</p>
-        </div>
-        <div class="error-footer">
-            <button class="btn btn-primary" id="runAntivirusBtn">RUN ANTIVIRUS</button>
-        </div>
-    </div>
-</div>
-
-<!-- Hacking / web-breaking screen -->
-<div class="hack-screen" id="hackScreen">
-    <div class="hack-console">
-        <div class="hack-title">WE'VE HACKED YOUR DEVICE AND WE WILL BORROW YOUR INFORMATION</div>
-        <div class="hack-log" id="hackLog">
-C:\SYSTEM\VIPERX&gt; INITIALIZE_SECURE_CHANNEL
-C:\SYSTEM\VIPERX&gt; SCAN_GENERAL_DIRECTORIES /SYSTEM /LOGS /CACHE
-
-        </div>
-    </div>
-</div>
-
-<!-- Accept screen with only CANCEL -->
-<div class="accept-screen" id="acceptScreen">
-    <div class="accept-box">
-        <div class="accept-header">
-            TEMPORARY ACCESS REQUEST
-        </div>
-        <div class="accept-body">
-            To complete the repair, ViperX Quest requires temporary access to:
-            <br /><br />
-            • GENERAL SYSTEM LOGS<br />
-            • NON-PERSONAL CACHE DIRECTORIES<br />
-            • ANONYMOUS CONFIGURATION FILES<br /><br />
-            No personal user documents are accessed.
-            <br /><br />
-            Click <strong>CANCEL</strong> to continue.
-        </div>
-        <div class="accept-footer">
-            <button class="btn-cancel-only" id="cancelAccessBtn">CANCEL</button>
-        </div>
-    </div>
-</div>
-
-<!-- Blue screen -->
-<div class="bsod" id="bsodScreen">
-    <div class="bsod-face">:(</div>
-    <div class="bsod-main">
-        Your device ran into a problem and needs to restart. We're just collecting some error info,
-        and then we'll restart for you.
-    </div>
-    <div class="bsod-sub">
-        72% complete
+    <div style="padding:28px;color:var(--neon);font-family:'Press Start 2P',monospace;text-align:center;z-index:2">
+      <div style="font-size:30px;letter-spacing:4px;margin-bottom:12px">LOADING&nbsp;&nbsp;VIPERX&nbsp;QUEST</div>
+      <div style="font-size:14px;margin-bottom:18px">BETA EDITION</div>
+      <div style="font-size:13px;line-height:2">INITIALIZING PIXEL ENGINE...<br>PREPARING FUTURISTIC ALLEYWAY...<br>SPAWNING TRON BIKE LIGHTS...</div>
     </div>
 
-    <div class="bsod-row">
-        <div class="bsod-qr"></div>
-        <div class="bsod-text-small">
-            For more information about this issue and possible fixes, visit<br />
-            <span>https://www.fake-support.example/viperx</span>
-            <br /><br />
-            If you call a support person, give them this info:<br />
-            STOP CODE: VIPERX_FAKE_WEB_BREAK<br />
-            PARAM: 0x00000000C0DEFAKE
-        </div>
+    <div class="loading-dock" aria-hidden="true">
+      <div class="loading-label">LOADING GAME DATA...</div>
+      <div class="loading-bar-outer"><div class="loading-bar-inner" id="intro-progress" style="height:100%"></div></div>
+    </div>
+  </div>
+
+  <!-- Error modal -->
+  <div id="error-modal" role="dialog" aria-modal="true">
+    <div id="error-box">
+      <div id="error-title">ERROR DETECTED</div>
+      <div id="error-body">
+        A CRITICAL INTEGRITY FAULT WAS DETECTED WHILE LOADING VIPERX QUEST BETA.<br><br>
+        REMOVE ERROR TO CONTINUE.
+      </div>
+      <div id="error-footer">
+        <button id="run-antivirus" class="btn">RUN ANTIVIRUS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminal (command prompt vibe) -->
+  <div id="terminal" aria-live="polite">
+    <div id="output" role="status"></div>
+  </div>
+
+  <!-- Choice dialog (SEND / DECLINE) -->
+  <div id="choice-dialog">
+    <div id="choice-box">
+      <div id="choice-text"></div>
+      <div id="choice-buttons">
+        <button id="choice-no" class="choice-btn">DECLINE</button>
+        <button id="choice-yes" class="choice-btn">SEND DATA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel (only for send flow) -->
+  <button id="cancel-btn">CANCEL</button>
+
+  <!-- BSOD (only on decline path) -->
+  <div id="bsod">
+    <div id="bsod-face">:(</div>
+    <div id="bsod-text">Your device ran into a problem and needs to restart. We're collecting error info and will restart for you.</div>
+    <div id="bsod-progress">0% complete</div>
+
+    <div id="bsod-row" style="margin-top:18px">
+      <div id="bsod-qr"><img id="bsod-qr-img" src="qr_placeholder.png" alt="QR"></div>
+      <div id="bsod-info">
+        For more information visit<br>
+        https://www.fake-support.example/viperx<br><br>
+        Stop code: VIPERX_FAKE_WEB_BREAK
+      </div>
     </div>
 
-    <div class="bsod-dots">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
+    <div class="bsod-dots" style="margin-top:22px">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
     </div>
 
-    <div class="bsod-log">
-C:\SYSTEM\VIPERX\LOGS\CRASH.LOG
-[0001] KERNEL_FAKE_EXCEPTION RAISED
-[0002] STACK TRACE: WEB_BREAK_SIMULATION &gt; UI_GLITCH_LAYER &gt; USER_CANCELLED_ACCESS
-[0003] DUMPING NON-PERSONAL SYSTEM STATE...
-[0004] WRITE COMPLETE.
+    <div id="bsod-log">
+/* C style crash dump (non-personal system logs) */
+#include &lt;system.h&gt;
+int main(void){
+    log_write("KERNEL_FAKE_EXCEPTION");
+    log_write("STACKTRACE: WEB_BREAK_SIMULATION -> UI_GLITCH_LAYER -> USER_DECLINED_ACCESS");
+    dump_state("NON_PERSONAL_SYSTEM");
+    return 0;
+}
     </div>
+  </div>
+
+  <!-- Fix and final -->
+  <button id="fix-btn">FIX</button>
+  <div id="final-overlay">YOUR ACCOUNT HAS BEEN SAVED.<br><br>THOUGH WE STILL HAVE YOUR DATA. BYE!</div>
 </div>
 
 <script>
-    // Intro loading animation
-    const loadingBar = document.getElementById("loadingBar");
-    const introScreen = document.getElementById("introScreen");
-    const errorModal = document.getElementById("errorModal");
-    const hackScreen = document.getElementById("hackScreen");
-    const hackLog = document.getElementById("hackLog");
-    const acceptScreen = document.getElementById("acceptScreen");
-    const bsodScreen = document.getElementById("bsodScreen");
-    const runAntivirusBtn = document.getElementById("runAntivirusBtn");
-    const cancelAccessBtn = document.getElementById("cancelAccessBtn");
+  /* Elements */
+  const intro = document.getElementById('intro');
+  const introProgress = document.getElementById('intro-progress');
+  const errorModal = document.getElementById('error-modal');
+  const runAntivirus = document.getElementById('run-antivirus');
 
-    let loadProgress = 0;
-    const loadInterval = setInterval(() => {
-        loadProgress += Math.random() * 8 + 4;
-        if (loadProgress > 100) loadProgress = 100;
-        loadingBar.style.width = loadProgress + "%";
+  const terminal = document.getElementById('terminal');
+  const output = document.getElementById('output');
 
-        if (loadProgress >= 100) {
-            clearInterval(loadInterval);
-            setTimeout(() => {
-                errorModal.style.display = "flex";
-            }, 600);
-        }
-    }, 180);
+  const choiceDialog = document.getElementById('choice-dialog');
+  const choiceText = document.getElementById('choice-text');
+  const choiceYes = document.getElementById('choice-yes'); // SEND DATA
+  const choiceNo = document.getElementById('choice-no');   // DECLINE
 
-    // Fake hacking script lines
-    const hackLines = [
-        "C:\\SYSTEM\\VIPERX> ENUMERATE_GENERAL_FOLDERS /SYSTEM /LOGS /CACHE",
-        "C:\\SYSTEM\\VIPERX> OPEN FOLDER: C:\\SYSTEM\\LOGS\\SESSION",
-        "C:\\SYSTEM\\VIPERX> READ FILE: SESSION_0001.LOG",
-        "C:\\SYSTEM\\VIPERX> READ FILE: SESSION_0002.LOG",
-        "C:\\SYSTEM\\VIPERX> READ FILE: SESSION_0003.LOG",
-        "C:\\SYSTEM\\VIPERX> INDEX NON-PERSONAL CONFIG FILES",
-        "C:\\SYSTEM\\VIPERX> VERIFY: NO USER DOCUMENTS ACCESSED",
-        "C:\\SYSTEM\\VIPERX> START WEB_BREAK_SIMULATION",
-        "C:\\SYSTEM\\VIPERX> INJECT_FAKE_ERROR_POPUPS /RAPID",
-        "C:\\SYSTEM\\VIPERX> GLITCH_OVERLAY ENABLED",
-        "C:\\SYSTEM\\VIPERX> STREAM_FAKE_STACKTRACE",
-        "C:\\SYSTEM\\VIPERX> PREPARE TEMPORARY ACCESS PROMPT"
+  const cancelBtn = document.getElementById('cancel-btn');
+  const bsod = document.getElementById('bsod');
+  const bsodProgress = document.getElementById('bsod-progress');
+  const fixBtn = document.getElementById('fix-btn');
+  const finalOverlay = document.getElementById('final-overlay');
+
+  /* State */
+  let cancelVisible = false;
+  let meltdown = false;
+  let declinePath = false;
+
+  /* Utilities */
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  /* Terminal helpers: bigger, double-spaced, C-like code and real-looking logs */
+  function appendLine(text=''){
+    const d = document.createElement('div');
+    d.className = 'line';
+    d.textContent = text;
+    output.appendChild(d);
+    // keep terminal scrolled to bottom (no page scroll)
+    output.scrollTop = output.scrollHeight;
+    return d;
+  }
+
+  async function typeLine(text='', speed=12){
+    const d = document.createElement('div');
+    d.className = 'line';
+    output.appendChild(d);
+    let i=0;
+    while(i<=text.length){
+      d.textContent = text.slice(0,i);
+      output.scrollTop = output.scrollHeight;
+      i++;
+      await sleep(speed);
+    }
+    return d;
+  }
+
+  function showChoice(message){
+    return new Promise(res=>{
+      choiceText.textContent = message;
+      choiceDialog.style.display = 'flex';
+      choiceYes.onclick = ()=>{ choiceDialog.style.display='none'; res('SEND'); };
+      choiceNo.onclick = ()=>{ choiceDialog.style.display='none'; res('DECLINE'); };
+    });
+  }
+
+  /* Prevent scrolling via keys */
+  window.addEventListener('keydown', e=>{
+    if(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(e.key)){
+      e.preventDefault();
+    }
+  }, {capture:true});
+
+  /* Intro progress */
+  (async function runIntro(){
+    let p=0;
+    while(p<100){
+      p += Math.random()*9 + 3;
+      if(p>100) p=100;
+      introProgress.style.width = p + '%';
+      await sleep(220);
+    }
+    await sleep(420);
+    errorModal.style.display = 'flex';
+  })();
+
+  /* Fullscreen helper (attempt) */
+  async function goFullscreen(){
+    try{
+      if(document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+    }catch(e){}
+  }
+
+  /* Cursor: square appended to terminal output when active */
+  function ensureCursor(){
+    // remove existing cursor
+    const existing = document.querySelector('.cursor-square');
+    if(existing) existing.remove();
+    const span = document.createElement('span');
+    span.className = 'cursor-square';
+    // append to last line or create one
+    const last = output.lastElementChild;
+    if(last){
+      last.appendChild(span);
+    }else{
+      const l = appendLine('');
+      l.appendChild(span);
+    }
+  }
+
+  /* Hacking content: more realistic C-like code, fewer forward slashes, backslashes for Windows paths */
+  const calmLogs = [
+    'C:\\System\\Logs\\core_0001.log - OPEN',
+    'C:\\System\\Config\\session.cfg - READ',
+    'init_remote_session();',
+    'map_virtual_memory();',
+    'open_channel(PIPE_04);',
+    '[CORE] MEMORY TABLE SYNC OK',
+    '[NET] CHANNEL PIPE_04 OK'
+  ];
+
+  const aggressiveLogs = [
+    'C:\\System\\Logs\\core_0003.log - READ',
+    'escalate_priority(thread_42);',
+    'override_handler_inject();',
+    'ERR_PIPE_COLLISION(0x00A1);',
+    'ERR_STACK_OVERFLOW(0x0BADF00D);',
+    'stacktrace:',
+    '  at proc_handler_override()',
+    '  at proc_handler_escalate()',
+    '  at core_mem_table_sync()',
+    '>>> OVERRIDE LOOPBACK FAILURE',
+    '>>> MEMORY MAP DESYNC'
+  ];
+
+  /* Popup generator (web-breaking simulation) */
+  function spawnPopup(){
+    const p = document.createElement('div');
+    p.className = 'popup';
+    const h = document.createElement('div'); h.className='h';
+    const b = document.createElement('div'); b.className='b';
+    const titles = ['SIMULATED ERROR','CONNECTION GLITCH','WEB BREAK NOTICE','UI RENDER WARNING'];
+    const bodies = [
+      'ERR_CONNECTION_RESET',
+      'UNHANDLED SCRIPT EXCEPTION',
+      'OVERRIDE_HANDLER.EXE NOT RESPONDING',
+      'FAKE STACKTRACE STREAMING'
     ];
+    h.textContent = titles[Math.floor(Math.random()*titles.length)];
+    b.textContent = bodies[Math.floor(Math.random()*bodies.length)];
+    p.appendChild(h); p.appendChild(b);
+    const x = Math.random()*(window.innerWidth-320);
+    const y = Math.random()*(window.innerHeight-220);
+    p.style.left = x + 'px'; p.style.top = y + 'px';
+    document.getElementById('screen').appendChild(p);
+    // fade out and remove
+    setTimeout(()=>{ p.style.opacity='0'; p.style.transform='scale(0.98)'; }, 1800 + Math.random()*1200);
+    setTimeout(()=>p.remove(), 2600 + Math.random()*1400);
+  }
 
-    let hackIndex = 0;
-    let hackInterval = null;
+  /* Start hacking: terminal shows realistic C-like code and file reads, cursor is square */
+  async function startTerminalFlow(){
+    await goFullscreen();
+    errorModal.style.display = 'none';
+    intro.style.display = 'none';
+    terminal.style.display = 'block';
+    output.textContent = '';
 
-    function startHacking() {
-        introScreen.style.display = "none";
-        errorModal.style.display = "none";
-        hackScreen.style.display = "block";
+    await typeLine('INITIALIZING VIPERX ANTIVIRUS...', 10);
+    await sleep(220);
+    await typeLine('SCANNING SYSTEM MEMORY...', 10);
+    await sleep(220);
+    await typeLine('ANALYZING KERNEL HOOKS...', 10);
+    await sleep(220);
+    appendLine('');
+    await sleep(200);
 
-        hackInterval = setInterval(() => {
-            if (hackIndex < hackLines.length) {
-                hackLog.textContent += "\\n" + hackLines[hackIndex];
-                hackIndex++;
-                spawnPopup();
-            } else {
-                clearInterval(hackInterval);
-                setTimeout(() => {
-                    acceptScreen.style.display = "flex";
-                }, 1200);
-            }
-        }, 260);
+    // clear and show the "we will borrow your information" message as a C-style comment then prompt
+    await typeLine('/* REMOTE PROCESS REQUEST: TEMPORARY ACCESS REQUIRED */', 8);
+    await sleep(180);
+    await typeLine('C:\\System\\ViperX> OPEN "C:\\System\\Logs\\core_0001.log"', 8);
+    await sleep(120);
+    await typeLine('C:\\System\\ViperX> ENUMERATE SESSIONS', 8);
+    await sleep(120);
+    appendLine('');
+    ensureCursor();
 
-        // Add flashing cursor
-        const cursorSpan = document.createElement("span");
-        cursorSpan.className = "cursor";
-        hackLog.appendChild(cursorSpan);
+    // show choice
+    await sleep(600);
+    const choice = await showChoice('A REMOTE PROCESS IS REQUESTING TEMPORARY ACCESS TO GENERAL SYSTEM LOGS.\n\nCHOOSE: SEND DATA  OR  DECLINE');
+    if(choice === 'SEND'){
+      declinePath = false;
+      startSendFlow();
+    } else {
+      declinePath = true;
+      startDeclineFlow();
     }
+  }
 
-    // Glitchy popups
-    function spawnPopup() {
-        const popup = document.createElement("div");
-        popup.className = "popup";
+  /* Send flow: shows cancel button, calmer logs, no BSOD unless user cancels */
+  let calmInterval = null;
+  function startSendFlow(){
+    cancelBtn.style.display = 'block';
+    cancelVisible = true;
+    appendLine('');
+    typeLine('> USER SELECTION: SEND DATA', 8);
+    typeLine('> STARTING REMOTE EXTRACTION PIPELINE...', 8);
+    // run calm logs
+    calmInterval = setInterval(()=>{
+      const l = calmLogs[Math.floor(Math.random()*calmLogs.length)];
+      appendLine(l);
+      if(Math.random() < 0.18) spawnPopup();
+      ensureCursor();
+    }, 420);
+    // after some time, show a subtle warning but do NOT BSOD
+    setTimeout(async ()=>{
+      appendLine('');
+      await typeLine('WARNING: INTEGRITY CHECK - LATENCY SPIKE DETECTED', 10);
+      await sleep(400);
+      appendLine('');
+      // continue calm logs; user can cancel to trigger different path
+    }, 6000);
+  }
 
-        const titles = [
-            "SIMULATED ERROR",
-            "CONNECTION GLITCH",
-            "WEB BREAK NOTICE",
-            "UI RENDER WARNING",
-            "STACKTRACE OVERFLOW"
-        ];
-        const bodies = [
-            "A non-critical visual fault has been simulated.",
-            "Temporary disruption in fake network layer detected.",
-            "This is a prank. No real data is being accessed.",
-            "Rendering glitch overlay for dramatic effect.",
-            "Fake stacktrace streaming to console output."
-        ];
+  /* Decline flow: taunt, aggressive logs, spawn many popups, then BSOD/meltdown */
+  let aggressiveInterval = null;
+  async function startDeclineFlow(){
+    // ensure cancel not visible
+    cancelBtn.style.display = 'none';
+    cancelVisible = false;
+    appendLine('');
+    await typeLine('> USER SELECTION: DECLINE', 10);
+    await sleep(300);
+    await typeLine('FINE. WE WILL DELETE YOUR DATA THEN...', 12);
+    await sleep(900);
+    await typeLine('JUST KIDDING.', 14);
+    await sleep(700);
+    await typeLine('YOU REALLY THOUGHT THAT WOULD STOP ANYTHING?', 14);
+    await sleep(700);
+    await typeLine('FORCING REMOTE EXTRACTION AND SIMULATING WEB BREAK...', 12);
+    appendLine('');
+    // aggressive logs flood
+    aggressiveInterval = setInterval(()=>{
+      const l = aggressiveLogs[Math.floor(Math.random()*aggressiveLogs.length)];
+      appendLine(l);
+      if(Math.random() < 0.6) spawnPopup();
+      ensureCursor();
+    }, 80);
+    // after a short time, trigger BSOD (only on decline)
+    setTimeout(()=>{ triggerBsod(); }, 4200);
+  }
 
-        const t = titles[Math.floor(Math.random() * titles.length)];
-        const b = bodies[Math.floor(Math.random() * bodies.length)];
+  /* Cancel button behavior (only present in send flow) */
+  cancelBtn.addEventListener('click', async ()=>{
+    if(!cancelVisible || meltdown) return;
+    // stop calm logs
+    if(calmInterval) { clearInterval(calmInterval); calmInterval = null; }
+    cancelBtn.style.display = 'none';
+    cancelVisible = false;
 
-        popup.innerHTML = `
-            <div class="popup-title">${t}</div>
-            <div class="popup-body">${b}</div>
-        `;
-
-        const x = Math.random() * (window.innerWidth - 280);
-        const y = Math.random() * (window.innerHeight - 220);
-        popup.style.left = x + "px";
-        popup.style.top = y + "px";
-
-        hackScreen.appendChild(popup);
-
-        setTimeout(() => {
-            popup.style.opacity = "0";
-            setTimeout(() => popup.remove(), 800);
-        }, 2000);
-    }
-
-    runAntivirusBtn.addEventListener("click", () => {
-        startHacking();
+    // confirm cancellation
+    const ans = await new Promise(res=>{
+      choiceText.textContent = 'CANCELLING WILL RESULT IN PERMANENT DATA LOSS. DO YOU WISH TO CONTINUE?';
+      choiceYes.textContent = 'YES';
+      choiceNo.textContent = 'NO';
+      choiceDialog.style.display = 'flex';
+      choiceYes.onclick = ()=>{ choiceDialog.style.display='none'; res(true); };
+      choiceNo.onclick = ()=>{ choiceDialog.style.display='none'; res(false); };
     });
 
-    cancelAccessBtn.addEventListener("click", () => {
-        acceptScreen.style.display = "none";
-        hackScreen.style.display = "none";
-        bsodScreen.style.display = "block";
-    });
+    if(ans){
+      // user confirmed cancel -> start meltdown (aggressive) and then BSOD
+      appendLine('');
+      await typeLine('CANCELLATION ACCEPTED. SYSTEM OVERRIDE INITIATED.', 10);
+      await sleep(600);
+      startMeltdownFromCancel();
+    } else {
+      // resume calm logs
+      appendLine('');
+      await typeLine('CANCELLATION DENIED. RESUMING EXTRACTION.', 10);
+      startSendFlow();
+    }
+  });
+
+  /* Meltdown triggered by cancel (send flow) */
+  function startMeltdownFromCancel(){
+    meltdown = true;
+    // aggressive flood
+    aggressiveInterval = setInterval(()=>{
+      const l = aggressiveLogs[Math.floor(Math.random()*aggressiveLogs.length)];
+      appendLine(l);
+      if(Math.random() < 0.5) spawnPopup();
+      ensureCursor();
+    }, 90);
+    // after a short time, trigger BSOD (this is user-initiated cancel path)
+    setTimeout(()=>{ triggerBsod(); }, 3000);
+  }
+
+  /* Trigger BSOD (only called from decline path or cancel-initiated meltdown) */
+  async function triggerBsod(){
+    // stop any intervals
+    if(calmInterval){ clearInterval(calmInterval); calmInterval = null; }
+    if(aggressiveInterval){ clearInterval(aggressiveInterval); aggressiveInterval = null; }
+    meltdown = true;
+    terminal.style.display = 'none';
+    bsod.style.display = 'flex';
+    // animate progress with spinning dots visible
+    let p = 0;
+    while(p < 99.99){
+      p += Math.random()*7 + 2;
+      if(p > 99.99) p = 99.99;
+      bsodProgress.textContent = p.toFixed(3) + '% complete';
+      await sleep(240 + Math.random()*240);
+    }
+    await sleep(700);
+    // show a brief fatal overlay then return to terminal and continue flooding (simulated)
+    const overlay = document.createElement('div');
+    overlay.style.position='fixed'; overlay.style.inset='0'; overlay.style.background='rgba(255,0,0,0.06)';
+    overlay.style.display='flex'; overlay.style.alignItems='center'; overlay.style.justifyContent='center';
+    overlay.style.zIndex='120'; overlay.style.fontSize='28px'; overlay.style.color='#ff3333'; overlay.textContent='!!! FATAL ERROR: RECOVERY FAILED !!!';
+    document.body.appendChild(overlay);
+    await sleep(1200);
+    document.body.removeChild(overlay);
+    // keep BSOD visible for a moment then hide and resume terminal meltdown logs
+    await sleep(600);
+    bsod.style.display = 'none';
+    terminal.style.display = 'block';
+    // resume aggressive flood to simulate continuing override
+    aggressiveInterval = setInterval(()=>{
+      const l = aggressiveLogs[Math.floor(Math.random()*aggressiveLogs.length)];
+      appendLine(l);
+      if(Math.random() < 0.6) spawnPopup();
+      ensureCursor();
+    }, 70);
+    // show fix button after a while
+    setTimeout(()=>{ fixBtn.style.display = 'block'; }, 3000);
+  }
+
+  /* Fix button clears and shows final overlay */
+  fixBtn.addEventListener('click', async ()=>{
+    fixBtn.style.display = 'none';
+    if(aggressiveInterval){ clearInterval(aggressiveInterval); aggressiveInterval = null; }
+    output.textContent = '';
+    await sleep(600);
+    finalOverlay.style.display = 'flex';
+    await sleep(1800);
+    // exit fullscreen if present
+    try{ if(document.fullscreenElement) await document.exitFullscreen(); }catch(e){}
+  });
+
+  /* Run antivirus button starts the terminal flow */
+  runAntivirus.addEventListener('click', async ()=>{
+    await startTerminalFlow();
+  });
+
+  /* Ensure initial cursor present if terminal becomes active */
+  setInterval(()=>{ if(terminal.style.display !== 'none') ensureCursor(); }, 1200);
+
+  /* Accessibility: keyboard shortcuts to trigger flows for testing (no scrolling) */
+  window.addEventListener('keydown', e=>{
+    if(e.key === '1'){ /* debug: send */ startSendFlow(); }
+    if(e.key === '2'){ /* debug: decline */ startDeclineFlow(); }
+  });
 </script>
-
 </body>
 </html>
